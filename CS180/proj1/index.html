@@ -10,14 +10,16 @@
         <p>
             The first task was trying to figure out image alignment. This is so that the blue, red, and green channels sit on top of each other in a way that makes a cohesive picture.
             For this, I chose blue as my base channel, and aligned my red and green channels to it. 
-            I decided to do the alignment based on pixel intensity, because it seemed that all three color channels had roughly the same pixel intensity at the spots they were supposed to align at.
-            I used the normalized cross corralation metric on the pixel intensities to align the photos. Here is the formula
+            For the single-scale alignment case, I decided to do the alignment based on pixel intensity, because it seemed that all three color channels had roughly the same pixel intensity at the spots they were supposed to align at.
+            I used the normalized cross corralation metric on the pixel intensities to align the photos. Here is the formula from the class slides. Intuitively, what this does is measuree how similar the two images are. So the higher the cross correlation, the better.
         </p>
         <img src="./webpage images/NCC.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
         <p>
-            I decided to only bother aligning the middle 40% of the image to save computational time.
-            Notice also that the blue shift is always (0, 0). This is because, as mentioned earlier, the blue channel is my base channel, while the red and green align on that
+            I decided to only bother aligning the middle 40% of the image to save computational time. This was not neccessary for the single-scale alignment case, but became important when I had to align bigger pictures in the multi-scale alignment case. 
+            One issue that I ran into when aligning was trying to figure out what to do with the "ledge" of the image as I slide one image over the other. Obviously, we can not take a dot product (which is important for a cross correlation) of two matrices if their corners are not lined up. To solve this, I used the np.roll() function as per the project websites suggestion.
+            However, then came the issue of not wanting to deal with the "overflow". Although np.roll did line up the corners of the images so that taking a dot product is possible, it did this by pushing the "ledge" back to the otherside of the image. That would have messed up my NCC measurements. To solve this, I used a masking matrix on top of the image that was sliding on top of the base image. What this masking matrix did is set all values in the "border" of the sliding image to zero, where the border is chosen to be thick enough such that a nonzero value will never roll over to the otherside of the image. 
         </p>
+        <p>The offsets of each color channel for aligning the image is listed below the image. (Notice also that the blue shift is always (0, 0). This is because, as mentioned earlier, the blue channel is my base channel, while the red and green align on that)</p>
         <h3>monastery.jpg</h3>
             <div class = "image-row">
                 <figure>
@@ -60,8 +62,8 @@
         </p>
         <img src="./webpage images/pyramid_example.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
         <p>
-            Although the image pyramid proved to be a good strategy, this unfortunately did not end up being fast enough for all of my images, and it left some of my images not all that well aligned either (in particular, see emir.tif and melon.tif)
-            I decided to also use the sobel feature of skimage. This is a pixel intensity derivative calculator. What this means it results in high values for any regions that have a sudden jump in pixel intensity, and low negative values for for any regions that have a sudden drop in pixel intensity.
+            Although the image pyramid proved to be a good strategy, this unfortunately did not work well on all of my images (in particular, see emir.tif and melon.tif)
+            I decided to fix this by using the sobel feature of skimage. This is a pixel intensity derivative calculator. What this means it results in high values for any regions that have a sudden jump in pixel intensity, and low negative values for for any regions that have a sudden drop in pixel intensity.
             Intuitively, this is just an edge detector. The sobel method of skimage calculates boht the x and y partial derivatives by convolving the image with the following matrices, and then merges the outputs into one image that displays both edges along the x and y direction with the following function.
             The NCC, which I formerly applied on the raw pixel intensities before, were now being applied to the outcome of the "Magnitude" function of the edge detector"
         </p>
