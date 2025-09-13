@@ -20,9 +20,10 @@
             However, then came the issue of not wanting to deal with the "overflow". Although np.roll did line up the corners of the images so that taking a dot product is possible, it did this by pushing the "ledge" back to the otherside of the image. That would have messed up my NCC measurements. To solve this, I used a masking matrix on top of the image that was sliding on top of the base image. What this masking matrix did is set all values in the "border" of the sliding image to zero, where the border is chosen to be thick enough such that a nonzero value will never roll over to the otherside of the image. 
         </p>
         <p>The offsets of each color channel for aligning the image is listed below the image. (Notice also that the blue shift is always (0, 0). This is because, as mentioned earlier, the blue channel is my base channel, while the red and green align on that)</p>
-        <h3>monastery.jpg</h3>
+        <div class = "image-row">
             <div class = "image-row">
                 <figure>
+                <h3>monastery.jpg</h3>
                 <img src = "./images restored (ncc)/Red (2, 3) || Green (2, -3) || Blue (0, 0) monastery.jpg" width="400">
                 <figcaption>Red (2, 3) || Green (2, -3) || Blue (0, 0)</figcaption>
                 </figure>
@@ -31,9 +32,9 @@
                 <figcaption>Red (2, 3) || Green (2, -3) || Blue (0, 0)</figcaption>
                 </figure> -->
             </div>
-        <h3>cathedral.jpg</h3>
             <div class = "image-row">
                 <figure>
+                <h3>cathedral.jpg</h3>
                 <img src = "./images restored (ncc)/Red (3, 12) || Green (2, 5) || Blue (0, 0) cathedral.jpg" width="400">
                 <figcaption>Red (3, 12) || Green (2, 5) || Blue (0, 0)</figcaption>
                 </figure>
@@ -42,9 +43,9 @@
                 <figcaption>Red (3, 12) || Green (2, 5) || Blue (0, 0)</figcaption>
                 </figure> -->
             </div>
-        <h3>tobolsk.jpg</h3>
             <div class = "image-row">
                 <figure>
+                <h3>tobolsk.jpg</h3>
                 <img src = "./images restored (ncc)/Red (3, 7) || Green (3, 3) || Blue (0, 0) tobolsk.jpg" width="400">
                 <figcaption>Red (3, 7) || Green (3, 3) || Blue (0, 0)</figcaption>
                 </figure>
@@ -53,6 +54,7 @@
                 <figcaption>Red (3, 7) || Green (3, 3) || Blue (0, 0)</figcaption>
                 </figure> -->
             </div>
+        </div>
     <h2>Multi-scale pyramid alignment</h2>
         <p>
             For this task, simply cross corrolating the images was not going work. This is because the following images are too big, and therefore it would take a long time to use NCC on these. 
