@@ -11,7 +11,7 @@
             The first task was trying to figure out image alignment. This is so that the blue, red, and green channels sit on top of each other in a way that makes a cohesive picture.
             For this, I chose blue as my base channel, and aligned my red and green channels to it. 
             For the single-scale alignment case, I decided to do the alignment based on pixel intensity, because it seemed that all three color channels had roughly the same pixel intensity at the spots they were supposed to align at.
-            I used the normalized cross corralation metric on the pixel intensities to align the photos. Here is the formula from the class slides. Intuitively, what this does is measuree how similar the two images are. So the higher the cross correlation, the better.
+            I used the normalized cross corralation metric on the pixel intensities to align the photos. Here is the formula from the class slides. Intuitively, what this does is measure how similar the two images are. So the higher the cross correlation, the better.
         </p>
         <img src="./webpage images/NCC.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
         <p>
@@ -64,10 +64,12 @@
         </p>
         <img src="./webpage images/pyramid_example.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
         <p>
-            Although the image pyramid proved to be a good strategy, this unfortunately did not work well on all of my images (in particular, see emir.tif and melon.tif)
-            I decided to fix this by using the sobel feature of skimage. This is a pixel intensity derivative calculator. What this means it results in high values for any regions that have a sudden jump in pixel intensity, and low negative values for for any regions that have a sudden drop in pixel intensity.
-            Intuitively, this is just an edge detector. The sobel method of skimage calculates boht the x and y partial derivatives by convolving the image with the following matrices, and then merges the outputs into one image that displays both edges along the x and y direction with the following function.
-            The NCC, which I formerly applied on the raw pixel intensities before, were now being applied to the outcome of the "Magnitude" function of the edge detector"
+            The image pyramid proved to be a somewhat of a decent strategy. It was quite computationally effective compared to the naive approach of just running NCC without any image pyramid. However, it still did take a long time (about 90 to 120 seconds). To deal with this issue, I decided to reduce the total search window for my NCC alignment by a factor of 2 each time I moved from a smaller layer back to a bigger layer of the pyramid. 
+            Unfortunately, this in turn messed up my images for emir.tif and melon.tif. (You can see the issue in the pictures below).
+            I decided to try a more aggressive alignment policy. Rather than aligning by pixel intensity, (which relied on a somewhat fallible assumption that all the images of different color channels have the roughly the same pixel intensity at the same spot), I decided to align based off of edges, which were likely to be shared by the three color channels than pixel intensity.
+            This was easy to do using the sobel feature of skimage. This is a pixel intensity derivative calculator. What this means it results in high values for any regions that have a sudden jump in pixel intensity, and low negative values for for any regions that have a sudden drop in pixel intensity.
+            Intuitively, this is just the edge detector that I was looking for. The sobel method of skimage calculates both the x and y partial derivatives along points of the image by convolving the image with the following matrices (called kernels), and then merges the outputs into one image that displays both edges along the x and y direction with the following function.
+            The NCC, which I formerly applied on the raw pixel intensities before, will now be applied to the outcome of the "Magnitude" function of the edge detector"
         </p>
         <div class = "image-row">
             <figure>
@@ -77,7 +79,7 @@
                 <img src="./webpage images/sobel magnitude.png" width="400">
             </figure>
         </div>
-        <p>The images with the image pyramid are shown to the left, and the images with both the image pyramid and edge detector are shown to the right</p>
+        <p>The images with the image pyramid and ncc are shown to the left, and the images with the image pyramid, edge detector, and ncc applied to the edge detecter are shown to the right</p>
         <h3>siren.tif</h3>
             <div class="image-row">
                 <figure>
@@ -199,5 +201,32 @@
                 <figcaption>Red (37, 175) || Green (29, 78) || Blue (0, 0)</figcaption>
                 </figure>
             </div>
+            
+    <h2>Extra Images</h2>
+    <p>Here are two extra images of my choosing. The ncc + imagepyramid image is to the left. The sobel + ncc + imagepyramid image is to the right</p>
+
+    <h3>garden.tif</h3>
+    <div class = "image-row">
+        <figure>
+        <img src = "./images restored (ncc)/Red (30, 156) || Green (21, 76) || Blue (0, 0) garden.png" width="400">
+        <figcaption>Red (30, 156) || Green (21, 76) || Blue (0, 0)</figcaption>
+        </figure>
+        <figure>
+        <img src = "./images restored (sobel and ncc)/Red (30, 155) || Green (21, 76) || Blue (0, 0) garden.png" width="400">
+        <figcaption>Red (30, 155) || Green (21, 76) || Blue (0, 0)</figcaption>
+        </figure>
+    </div>
+    <h3>farmhouse.tif</h3>
+        <div class = "image-row">
+            <figure>
+            <img src = "./images restored (ncc)/Red (36, 123) || Green (19, 27) || Blue (0, 0) farmhouse.png" width="400">
+            <figcaption>Red (36, 123) || Green (19, 27) || Blue (0, 0)</figcaption>
+            </figure>
+            <figure>
+            <img src = "./images restored (sobel and ncc)/Red (36, 123) || Green (19, 27) || Blue (0, 0) farmhouse.png" width="400">
+            <figcaption>Red (36, 123) || Green (19, 27) || Blue (0, 0)</figcaption>
+            </figure>
+        </div>
+
 </body>
 </html>
