@@ -170,7 +170,7 @@ class Convolution:
                 </code></pre>
             </details>
             <p>
-                I noticed that convolve 2d took more time than convolve 4d, which took more time than scipy.signal.convolve2d did. All cases zero fill the boundaries to convolve.
+                I noticed that convolve with 4 for loops took more time than convolve with 2 for loops, which took more time than scipy.signal.convolve2d did. All cases zero fill the boundaries to convolve.
                 However, observe how the blurring, Dx, and Dy filters for the scipy.signal.convolve2d, convolution with 4 for-loops, and convolution with 2 for-loops all result in images that look identical, even though they have been processed calling python functions</p>
     </details>
 
