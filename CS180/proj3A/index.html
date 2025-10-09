@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project 2: Fun with Filters</title>
+  
+    <link rel="stylesheet" href="styles.css" />
+    <!-- useful library for math formatting -->
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script> 
+</head>
+<body>
+
+    <header>
+        <h1>Project Three: Image Warping and Mosaicing</h1>
+    </header>
+    <details class = "task" open> <!--Task A1-->
+        <summary>Task A1: Center of Projection Photos</summary>
+            <p>For this task, I had to take several photos all with the same center of projection</p>
+            <p>here they are (sorry this is really poorly presented, but for the sake of getting this part done in time I just did this. I will fix this for the final submission)</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A1/image1.png" alt="Image 1" class="img-size15"/>
+                    <div class="caption">Image 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A1/image2.png" alt="Image 2" class="img-size15"/>
+                    <div class="caption">Image 2</div>
+                </div>
+            </div>
+    </details>
+
+    <details class = "task" open> <!--Task A2-->
+        <summary>Task A2: Compute Homography Matrix</summary>
+            <p>For this task, I had to find a homography matrix given a set of corresponding points (at least 4)</p>
+            <p>This was found using least squares.</p>
+            <p>I used these four points: [[106,78],[45,217],[371,213],[315,51]] in correspondance with these points: [[0,0],[0,301],[402,301],[402,0]] (these are copied from the notebook image in Task A3</p>
+            <p>This ended up being the system of linear equations I hoped to solve:
+                \[
+                \begin{bmatrix}
+                106 & 78 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 106 & 78 & 1 & 0 & 0 \\
+                45 & 217 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 45 & 217 & 1 & -13545 & -65317 \\
+                371 & 213 & 1 & 0 & 0 & 0 & -149142 & -85626 \\
+                0 & 0 & 0 & 371 & 213 & 1 & -111671 & -64113 \\
+                315 & 51 & 1 & 0 & 0 & 0 & -126630 & -20502 \\
+                0 & 0 & 0 & 315 & 51 & 1 & 0 & 0 \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                h1 \\
+                h2 \\
+                h3 \\
+                h4 \\
+                h5 \\
+                h6 \\
+                h7 \\
+                h8 \\
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                0 \\
+                0 \\
+                0 \\
+                301 \\
+                402 \\
+                301 \\
+                402 \\
+                0 \\
+                \end{bmatrix}
+                \]
+            </p>
+            <p>
+                The resulting H matrix I got from solving least squares is as follows:
+                \[ H =
+                \begin{bmatrix}
+                4.57035247e+00 & 2.00569425e+00 & -6.40901513e+02 \\
+                8.47015970e-01 & 6.55653103e+00 & -6.01193113e+02 \\
+                2.64495777e-03 & 8.00501991e-03 & 1.00000000e+00 \\
+                \end{bmatrix}
+                \]
+            </p>
+    </details>
+
+    <details class = "task" open> <!--Task A3-->
+        <summary>Task A3: Image Rectification</summary>
+            <p>For this task, I had to rectify a a photo of a square taken from the side</p>
+            <p>I have tried the rectification both via Bilinear Interpolation method (rectified_BI) and via Nearest Neighbor (rectified_NN).</p>
+            <p>here they are (sorry this is really poorly presented, but for the sake of getting this part done in time I just did this. I will fix this for the final submission)</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification1.png" alt="Rectification 1" class="img-size15"/>
+                    <div class="caption">Rectification 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification2.png" alt="Rectification 2" class="img-size15"/>
+                    <div class="caption">Rectification 2</div>
+                </div>
+            </div>
+            <p>
+                The hardest part of this was creating the canvas. 
+                At first, I was able to fairly easily get the image in such a way that I rectify the square/rectangle that I wanted to, but in the rectification, everything was cropped besides the actual square/rectangle itself. 
+            </p>
+            <p>
+                What I had to do to create this bigger canvas was first create a homography on the main subject of my image, which is usually a rectangle/square, by mapping the 4 corners into 4 points that actually do define a rectangle/square 
+                (note that I did not bother preserving the aspect ratio for the sake of time. I ended up using the following coordinates for the output rectangle: [[0,0],[0,301],[402,301],[402,0]]. I made this decision before I fully realized what I was doing, and at that time I was originally trying to map the subject of my image onto the 4 corners of a canvas which i decided to make the exact same size of my image, which was 302 x 403)
+                Then, I had to see where this homography would take the four corners of my original image, and then make a canvas big enough to fit all of the corners into it. 
+                Then, I had to find a way to map the image properly into the canvas, which I did by some wierd coordinate translation stuff to make sure that the corners which get mapped, for example, into negative values get translated back into the canvas. 
+                The main way I did this was by preserving the most negative x and y values that one of my 4 corners mapped into (roughly speaking, this is not exactly what I did but I do not know how to say what I did properly enough to write it down here), and then I shifted every point transformed under H by that x and y value to bring it back into the coordinate system so that it sits within the canvas.
+            </p>
+    </details>
+
+    <details class = "task" open> <!--Task A4-->
+        <summary>Task A4: Panorama</summary>
+            <p>For this task, I had to blend two or more images taken from the same center of projection into a panorama</p>
+            <p>I have created 3 different panoramas with two images each. I have tried creating the panoramas both via Bilinear Interpolation method (pano_BI) and via Nearest Neighbor (pano_NN).</p>
+            <p>here they are (sorry this is really poorly presented, but for the sake of getting this part done in time I just did this. I will fix this for the final submission)</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano1.png" alt="Panorama 1" class="img-size15"/>
+                    <div class="caption">Panorama 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano2.png" alt="Panorama 1" class="img-size15"/>
+                    <div class="caption">Panorama 2</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano3.png" alt="Panorama 3" class="img-size15"/>
+                    <div class="caption">Panorama 3</div>
+                </div>
+            </div>
+            <p>
+                The hardest part of this was creating the canvas. For the sake of getting part A of this project done on time, i just kind of cheated my way around it and created a mega big canvas.
+                The mega canvas was just padding my base image with 500 zeros to the top, bottom, right, and left. 
+                I then selected corresponding points between the image that I wanted to warp, and the points in the base image within the canvas (I had to use the canvas, and not the original base image itself because I was projecting the second image onto the canvas rather than the original base image)
+                I then computing the Homography matrix, and went through the entire mapping procedure. 
+                However, I did not directly map the second image to the canvas (although in hind sight, maybe I could have). 
+                Instead, I mapped it onto an empty canvas that had the same dimensions as the first canvas. 
+                The idea is that now I have two canvases, one with each image, and if I combine them in some way, I would get the final image.
+                In order to combine them, I had to account for an extra detail: the alpha values
+            </p>
+            <p>
+                Dealing with the alpha values was another fairly difficult task (but not as difficult cuz I kinda quickly gave up on it and hacked my way around it). 
+                Again, for the sake of getting part A done in time, I also hacked my way around this and just created a seperate image matrix called alpha_values
+                This alpha_values matrix had the same dimensions as the canvas, and was initiated to zero in all three of its color channels in every point, except for the points where the base image was on the canvas. 
+                At those points, the alpha_values matrix had a value of one. 
+                When I mapped the warp image onto the blank canvas, each time I put a point from my warped image into the blank canvas, I had to track which coordinates on the blank canvas the warped image was being put into, and I found the corresponding point in the alpha matrix and added one to it.
+            </p>
+            <p>
+                In the end, I did an elementwise sum of the two canvases together, and then an elementwise division by the alpha matrix (numpy seemed to automatically deal with the zero division error, which was very helpful) 
+            </p>
+    </details>
+
+  <footer>
+    &copy; 2025 Sinan — Image Warping and Mosaicing
+  </footer>
+</body>
+</html>
