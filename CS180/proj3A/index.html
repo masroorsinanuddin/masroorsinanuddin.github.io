@@ -160,11 +160,11 @@
                 In the end, I did an elementwise sum of the two canvases together, and then an elementwise division by the alpha matrix (numpy seemed to automatically deal with the zero division error, which was very helpful) 
             </p>
     </details>
-    <h1>Update: I talked to a TA, and they said I could not update Project 3A to make it nicer</h1>
+    <h1>Update: I talked to a TA, and they said I could not update Project 3A to make the website look nicer or change my panoramas to have dynamically sized canvases, so I will not be doing these.</h1>
     <br>
     <details class = "task" open> <!--Task B1-->
         <summary>Task B1: Harris Corner Detection</summary>
-            <p>For this task, I implemented the Harris Interest Point Detector at a single scale, without sub-pixel accuracy. I used the provided sample code from harris.py as a starting point.</p>
+            <p>For this task, I found the corners of the point with the harris edge detector.</p>
             <p>I also implemented Adaptive Non-Maximal Suppression (ANMS) to select the best corners. For initial development, I sometimes used random corners as placeholders before finalizing ANMS.</p>
             <p>Below are the detected corners overlaid on one of the images from Part A, shown both with and without ANMS.</p>
             <div class="row-gallery">
@@ -203,7 +203,7 @@
 
     <details class = "task" open> <!--Task B2-->
         <summary>Task B2: Feature Descriptor Extraction</summary>
-            <p>For this task, I extracted feature descriptors from the detected corners. I used axis-aligned 8x8 patches sampled from larger 40x40 windows around each corner to create blurred descriptors. I applied bias/gain normalization but skipped rotation invariance and wavelet transforms.</p>
+            <p>For this task, I extracted feature descriptors from the detected corners. I used axis-aligned 8x8 patches sampled from larger 40x40 windows around each corner to create blurred descriptors. I applied bias/gain normalization.</p>
             <p>Below are several extracted 8x8 feature descriptors from the first set of images of bedroom</p>
             <div class="row-gallery">
                 <div class="image-card">
@@ -232,7 +232,7 @@
 
     <details class = "task" open> <!--Task B3-->
         <summary>Task B3: Feature Matching</summary>
-            <p>For this task, I matched feature descriptors between image pairs using the ratio test from Lowe's method. I computed the nearest neighbors and thresholded based on the ratio of the first to second nearest neighbor distances (using a threshold around 0.8 as suggested by Figure 6b in the paper).</p>
+            <p>For this task, I matched feature descriptors between image pairs using the ratio test from Lowe's method. I computed the nearest neighbors and thresholded based on the ratio of the first to second nearest neighbor distances.</p>
             <p>Below are examples of matched features between two image pairs from Part A, with lines connecting the matches.</p>
             <div class="row-gallery">
                 <div class="image-card">
@@ -279,8 +279,8 @@
                 </div>
             </div>
             <p>The automatic method using RANSAC handles outliers better and produces comparable or improved results without manual point selection.</p>
-            <p>Note: During Project 3A, I had created a mega big canvas to place my panorama onto. For Project 3B, I changed my canvas to be dynamically sized. </p>
-            <p>Also, I have shown the results of nearest neighbor interpolation rather than bilinear. For an example of nearest neighbor vs bilinear interpolation method, please see Task A4</p>
+            <p>Note: During Project 3A, I had created a mega big canvas to place my panorama onto. For Project 3B, I figured out how to change my canvas to be dynamically sized, and did so, because the fixed size canvases was causing too many problems. </p>
+            <p>Also, I have shown the results of nearest neighbor interpolation rather than bilinear. For an example of bilinear interpolation with automatic feature detection, check out my code</p>
     </details>
   
   <footer>
