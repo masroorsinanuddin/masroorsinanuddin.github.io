@@ -160,88 +160,65 @@
                 In the end, I did an elementwise sum of the two canvases together, and then an elementwise division by the alpha matrix (numpy seemed to automatically deal with the zero division error, which was very helpful) 
             </p>
     </details>
-    <h1>Update: I talked to a TA, and they said I could not update Project 3A to make it nicer</h1>
-    <br>
-    <details class = "task" open> <!--Task B1-->
+
+    <details class = "task" close> <!--Task B1-->
         <summary>Task B1: Harris Corner Detection</summary>
             <p>For this task, I implemented the Harris Interest Point Detector at a single scale, without sub-pixel accuracy. I used the provided sample code from harris.py as a starting point.</p>
             <p>I also implemented Adaptive Non-Maximal Suppression (ANMS) to select the best corners. For initial development, I sometimes used random corners as placeholders before finalizing ANMS.</p>
             <p>Below are the detected corners overlaid on one of the images from Part A, shown both with and without ANMS.</p>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano1/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
+                    <img src="images/Task B1/corners_without_ANMS.png" alt="Corners without ANMS" class="img-size15"/>
                     <div class="caption">Harris Corners without ANMS</div>
-                </div>
-                <div class="image-card">
-                    <img src="images/Pano1/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
-                    <div class="caption">Harris Corners with ANMS</div>
                 </div>
             </div>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano2/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
-                    <div class="caption">Harris Corners without ANMS</div>
-                </div>
-                <div class="image-card">
-                    <img src="images/Pano2/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
-                    <div class="caption">Harris Corners with ANMS</div>
-                </div>
-            </div>
-            <div class="row-gallery">
-                <div class="image-card">
-                    <img src="images/Pano3/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
-                    <div class="caption">Harris Corners without ANMS</div>
-                </div>
-                <div class="image-card">
-                    <img src="images/Pano3/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
+                    <img src="images/Task B1/corners_with_ANMS.png" alt="Corners with ANMS" class="img-size15"/>
                     <div class="caption">Harris Corners with ANMS</div>
                 </div>
             </div>
             <p>The ANMS step helped reduce clustering and select more uniformly distributed corners, which is crucial for better feature matching in later steps.</p>
-            <p>I have no clue why so many "corners" were detected on plain surfaces like the wall, but the final panoramas turned out nice so I think it is working</p>
     </details>
 
-    <details class = "task" open> <!--Task B2-->
+    <details class = "task" close> <!--Task B2-->
         <summary>Task B2: Feature Descriptor Extraction</summary>
             <p>For this task, I extracted feature descriptors from the detected corners. I used axis-aligned 8x8 patches sampled from larger 40x40 windows around each corner to create blurred descriptors. I applied bias/gain normalization but skipped rotation invariance and wavelet transforms.</p>
-            <p>Below are several extracted 8x8 feature descriptors from the first set of images of bedroom</p>
+            <p>Below are several extracted 8x8 feature descriptors visualized as small images (enlarged for clarity).</p>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano1/Task B2/feature1.png" alt="Descriptor 1" class="img-size5"/>
+                    <img src="images/Task B2/descriptor1.png" alt="Descriptor 1" class="img-size15"/>
                     <div class="caption">Feature Descriptor 1</div>
                 </div>
                 <div class="image-card">
-                    <img src="images/Pano1/Task B2/feature2.png" alt="Descriptor 2" class="img-size5"/>
+                    <img src="images/Task B2/descriptor2.png" alt="Descriptor 2" class="img-size15"/>
                     <div class="caption">Feature Descriptor 2</div>
                 </div>
                 <div class="image-card">
-                    <img src="images/Pano1/Task B2/feature3.png" alt="Descriptor 3" class="img-size5"/>
-                    <div class="caption">Feature Descriptor 3</div>
-                </div>
-                <div class="image-card">
-                    <img src="images/Pano1/Task B2/feature4.png" alt="Descriptor 3" class="img-size5"/>
-                    <div class="caption">Feature Descriptor 3</div>
-                </div>
-                <div class="image-card">
-                    <img src="images/Pano1/Task B2/feature5.png" alt="Descriptor 3" class="img-size5"/>
+                    <img src="images/Task B2/descriptor3.png" alt="Descriptor 3" class="img-size15"/>
                     <div class="caption">Feature Descriptor 3</div>
                 </div>
             </div>
             <p>These descriptors capture local texture and are normalized to be robust to lighting changes.</p>
     </details>
 
-    <details class = "task" open> <!--Task B3-->
+    <details class = "task" close> <!--Task B3-->
         <summary>Task B3: Feature Matching</summary>
             <p>For this task, I matched feature descriptors between image pairs using the ratio test from Lowe's method. I computed the nearest neighbors and thresholded based on the ratio of the first to second nearest neighbor distances (using a threshold around 0.8 as suggested by Figure 6b in the paper).</p>
             <p>Below are examples of matched features between two image pairs from Part A, with lines connecting the matches.</p>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano1/Task B3/correspondances.png" alt="Matches Pair 1" class="img-size15"/>
+                    <img src="images/Task B3/matches_pair1.png" alt="Matches Pair 1" class="img-size15"/>
                     <div class="caption">Matched Features - Pair 1</div>
                 </div>
             </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B3/matches_pair2.png" alt="Matches Pair 2" class="img-size15"/>
+                    <div class="caption">Matched Features - Pair 2</div>
+                </div>
+            </div>
             <p>This step identifies likely corresponding points, though some mismatches may remain, which RANSAC will handle in the next task.</p>
-            <p>In my image, the point number 0 is the pair that had the best match, point 450 is the point that was the 450th best match</p>
     </details>
 
     <details class = "task" close> <!--Task B4-->
@@ -250,37 +227,35 @@
             <p>I used the same image pairs from Part A and produced at least three automatic mosaics. Below, I show side-by-side comparisons of manual stitching (from Part A) and automatic stitching for each.</p>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano1/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano1_manual.png" alt="Manual Pano 1" class="img-size15"/>
                     <div class="caption">Manual Stitching - Pano 1</div>
                 </div>
                 <div class="image-card">
-                    <img src="images/Pano1/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano1_auto.png" alt="Auto Pano 1" class="img-size15"/>
                     <div class="caption">Automatic Stitching - Pano 1</div>
                 </div>
             </div>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano2/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano2_manual.png" alt="Manual Pano 2" class="img-size15"/>
                     <div class="caption">Manual Stitching - Pano 2</div>
                 </div>
                 <div class="image-card">
-                    <img src="images/Pano2/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano2_auto.png" alt="Auto Pano 2" class="img-size15"/>
                     <div class="caption">Automatic Stitching - Pano 2</div>
                 </div>
             </div>
             <div class="row-gallery">
                 <div class="image-card">
-                    <img src="images/Pano3/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano3_manual.png" alt="Manual Pano 3" class="img-size15"/>
                     <div class="caption">Manual Stitching - Pano 3</div>
                 </div>
                 <div class="image-card">
-                    <img src="images/Pano3/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <img src="images/Task B4/Pano3_auto.png" alt="Auto Pano 3" class="img-size15"/>
                     <div class="caption">Automatic Stitching - Pano 3</div>
                 </div>
             </div>
             <p>The automatic method using RANSAC handles outliers better and produces comparable or improved results without manual point selection.</p>
-            <p>Note: During Project 3A, I had created a mega big canvas to place my panorama onto. For Project 3B, I changed my canvas to be dynamically sized. </p>
-            <p>Also, I have shown the results of nearest neighbor interpolation rather than bilinear. For an example of nearest neighbor vs bilinear interpolation method, please see Task A4</p>
     </details>
   
   <footer>

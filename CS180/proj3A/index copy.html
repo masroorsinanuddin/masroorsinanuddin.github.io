@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project 3: Image Warping and Mosaicing</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- MathJax for math formatting -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Project Three: Image Warping and Mosaicing</h1>
+        <p>By Sinan &mdash; A project on image warping, feature detection, and automatic panorama stitching.</p>
+    </header>
+
+    <!-- Part A -->
+    <section id="part-a">
+        <h2>Part A: Manual Image Warping and Mosaicing</h2>
+
+        <details class="task" open>
+            <summary>Task A1: Center of Projection Photos</summary>
+            <p>For this task, I captured several photos with the same center of projection to use for warping and mosaicing.</p>
+            <p>Below are the images used for subsequent tasks (apologies for the basic presentation; this will be polished for the final submission).</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A1/image1.png" alt="Image 1" class="img-size15"/>
+                    <div class="caption">Image 1</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task A1/image2.png" alt="Image 2" class="img-size15"/>
+                    <div class="caption">Image 2</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="task" close>
+            <summary>Task A2: Compute Homography Matrix</summary>
+            <p>I computed a homography matrix to map points from one image to another using at least four corresponding points, solved via least squares.</p>
+            <p>The corresponding points used were: \([[106, 78], [45, 217], [371, 213], [315, 51]]\) in Image 1, mapping to \([[0, 0], [0, 301], [402, 301], [402, 0]]\) in the target space (copied from my Task A3 notebook).</p>
+            <p>The resulting system of linear equations was:
+                \[
+                \begin{bmatrix}
+                106 & 78 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 106 & 78 & 1 & 0 & 0 \\
+                45 & 217 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 45 & 217 & 1 & -13545 & -65317 \\
+                371 & 213 & 1 & 0 & 0 & 0 & -149142 & -85626 \\
+                0 & 0 & 0 & 371 & 213 & 1 & -111671 & -64113 \\
+                315 & 51 & 1 & 0 & 0 & 0 & -126630 & -20502 \\
+                0 & 0 & 0 & 315 & 51 & 1 & 0 & 0 \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                h_1 \\ h_2 \\ h_3 \\ h_4 \\ h_5 \\ h_6 \\ h_7 \\ h_8 \\
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                0 \\ 0 \\ 0 \\ 301 \\ 402 \\ 301 \\ 402 \\ 0 \\
+                \end{bmatrix}
+                \]
+            </p>
+            <p>The homography matrix \( H \) obtained via least squares is:
+                \[
+                H = \begin{bmatrix}
+                4.57035247e+00 & 2.00569425e+00 & -6.40901513e+02 \\
+                8.47015970e-01 & 6.55653103e+00 & -6.01193113e+02 \\
+                2.64495777e-03 & 8.00501991e-03 & 1.00000000e+00 \\
+                \end{bmatrix}
+                \]
+            </p>
+        </details>
+
+        <details class="task" close>
+            <summary>Task A3: Image Rectification</summary>
+            <p>I rectified a photo of a square taken from an angled perspective to make it appear frontal, using both Bilinear Interpolation (rectified_BI) and Nearest Neighbor (rectified_NN) methods.</p>
+            <p>Below are the rectified images (presentation to be improved for final submission).</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification1.png" alt="Rectification 1" class="img-size15"/>
+                    <div class="caption">Rectification 1 (Bilinear Interpolation)</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification2.png" alt="Rectification 2" class="img-size15"/>
+                    <div class="caption">Rectification 2 (Nearest Neighbor)</div>
+                </div>
+            </div>
+            <p>The main challenge was creating a canvas large enough to avoid cropping. Initially, rectification only preserved the square, losing the rest of the image. To fix this, I mapped the four corners of the original image under the homography, determined the bounding box of the projected corners, and created a canvas to fit all points. I applied a translation to handle negative coordinates, shifting the warped image to fit within the canvas. The target rectangle coordinates were \([[0, 0], [0, 301], [402, 301], [402, 0]]\) (chosen to match the image size 302x403 without preserving aspect ratio for simplicity).</p>
+        </details>
+
+        <details class="task" close>
+            <summary>Task A4: Panorama</summary>
+            <p>I created panoramas by blending two images taken from the same center of projection, using both Bilinear Interpolation (pano_BI) and Nearest Neighbor (pano_NN) methods. Three panoramas were produced.</p>
+            <p>Below are the results (presentation to be improved for final submission).</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano1.png" alt="Panorama 1" class="img-size15"/>
+                    <div class="caption">Panorama 1 (Bilinear Interpolation)</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task A4/Pano2.png" alt="Panorama 2" class="img-size15"/>
+                    <div class="caption">Panorama 2 (Nearest Neighbor)</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task A4/Pano3.png" alt="Panorama 3" class="img-size15"/>
+                    <div class="caption">Panorama 3 (Bilinear Interpolation)</div>
+                </div>
+            </div>
+            <p>The canvas size was a challenge. For Part A, I used a large canvas (padding the base image with 500 pixels on all sides) to avoid complex calculations. I selected corresponding points between the images, computed the homography, and warped the second image onto a separate canvas matching the first canvas's size. To blend, I used an alpha matrix to track non-zero pixels in both images, setting alpha to 1 for the base image and incrementing it for warped image pixels. The final panorama was an element-wise sum of the canvases divided by the alpha matrix, handling overlaps (NumPy managed zero-division errors).</p>
+        </details>
+    </section>
+
+    <!-- Part B -->
+    <section id="part-b">
+        <h2>Part B: Automatic Image Stitching</h2>
+        <p>Part B focuses on automating the panorama stitching process by implementing feature detection, description, matching, and robust homography estimation, following the paper "Multi-Image Matching using Multi-Scale Oriented Patches" by Brown et al. (simplified to single-scale, non-rotation-invariant descriptors).</p>
+
+        <details class="task" open>
+            <summary>Task B1: Harris Corner Detection</summary>
+            <p>I implemented the Harris Corner Detector using provided code (`harris.py`) to detect interest points in an image, following Section 2 of the paper (single-scale, no sub-pixel accuracy). I also implemented Adaptive Non-Maximal Suppression (ANMS, Section 3) to select a well-distributed subset of corners, though I initially tested with random corner selection before completing ANMS.</p>
+            <p>Below are the detected corners overlaid on Image 1, with and without ANMS.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B1/corners_no_anms.png" alt="Corners without ANMS" class="img-size15"/>
+                    <div class="caption">Harris Corners without ANMS</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B1/corners_with_anms.png" alt="Corners with ANMS" class="img-size15"/>
+                    <div class="caption">Harris Corners with ANMS</div>
+                </div>
+            </div>
+            <p>The ANMS step ensured better spatial distribution of corners, reducing clustering in high-contrast areas. This was achieved by suppressing weaker corners within a radius proportional to their strength, as described in Section 3 of the paper.</p>
+        </details>
+
+        <details class="task" close>
+            <summary>Task B2: Feature Descriptor Extraction</summary>
+            <p>I extracted feature descriptors for each Harris corner, following Section 4 of the paper (simplified to axis-aligned 8x8 patches without rotation invariance). Each descriptor was sampled from a 40x40 window around the corner, blurred to reduce noise, and normalized for bias and gain to ensure robustness to lighting changes.</p>
+            <p>Below are examples of extracted 8x8 feature patches from Image 1.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B2/feature1.png" alt="Feature 1" class="img-size15"/>
+                    <div class="caption">Feature Descriptor 1</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B2/feature2.png" alt="Feature 2" class="img-size15"/>
+                    <div class="caption">Feature Descriptor 2</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B2/feature3.png" alt="Feature 3" class="img-size15"/>
+                    <div class="caption">Feature Descriptor 3</div>
+                </div>
+            </div>
+            <p>The 40x40 window was critical for capturing sufficient context, and normalization ensured descriptors were comparable across images. I skipped the wavelet transform as instructed.</p>
+        </details>
+
+        <details class="task" close>
+            <summary>Task B3: Feature Matching</summary>
+            <p>I implemented feature matching between two images, following Section 5 of the paper. Matches were identified by computing the Euclidean distance between 8x8 descriptors and applying Lowe’s ratio test (thresholding the ratio of the first to second nearest neighbor distances, inspired by Figure 6b in the paper).</p>
+            <p>Below are examples of matched features between Image 1 and Image 2.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B3/matches1.png" alt="Feature Matches 1" class="img-size15"/>
+                    <div class="caption">Feature Matches (Image 1 to Image 2)</div>
+                </div>
+            </div>
+            <p>The ratio test effectively filtered out ambiguous matches, ensuring only high-confidence correspondences were used for homography estimation.</p>
+        </details>
+
+        <details class="task" close>
+            <summary>Task B4: RANSAC for Robust Homography</summary>
+            <p>I implemented 4-point RANSAC from scratch to compute robust homography estimates, using the feature matches from Task B3. The algorithm iteratively samples four matches, computes a homography, and evaluates it based on the number of inliers (points with low reprojection error). The best homography was used to stitch images into mosaics, adapting the canvas creation and blending code from Task A4.</p>
+            <p>Below are three automatically stitched mosaics using the same image pairs from Task A4, compared with their manually stitched counterparts.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B4/Pano1/manual.png" alt="Manual Panorama 1" class="img-size15"/>
+                    <div class="caption">Manual Panorama 1</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B4/Pano1/auto.png" alt="Auto Panorama 1" class="img-size15"/>
+                    <div class="caption">Automatic Panorama 1 (RANSAC)</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B4/Pano2/manual.png" alt="Manual Panorama 2" class="img-size15"/>
+                    <div class="caption">Manual Panorama 2</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B4/Pano2/auto.png" alt="Auto Panorama 2" class="img-size15"/>
+                    <div class="caption">Automatic Panorama 2 (RANSAC)</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task B4/Pano3/manual.png" alt="Manual Panorama 3" class="img-size15"/>
+                    <div class="caption">Manual Panorama 3</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task B4/Pano3/auto.png" alt="Auto Panorama 3" class="img-size15"/>
+                    <div class="caption">Automatic Panorama 3 (RANSAC)</div>
+                </div>
+            </div>
+            <p>The canvas creation followed the same logic as Task A3, dynamically adjusting based on the projected corners of the warped image. Blending used the alpha matrix approach from Task A4. RANSAC significantly improved robustness compared to manual point selection, handling outliers in feature matches effectively.</p>
+        </details>
+    </section>
+
+    <footer>
+        &copy; 2025 Sinan &mdash; Image Warping and Mosaicing
+    </footer>
+</body>
+</html>
