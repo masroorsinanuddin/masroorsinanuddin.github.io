@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image Warping and Mosaicing Exploration</title>
+  
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Library for math formatting -->
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script> 
+</head>
+<body>
+
+    <header>
+        <h1>Image Warping and Mosaicing Exploration</h1>
+    </header>
+    <details class="task" close> <!--Section 1-->
+        <summary>Capturing Photos with a Fixed Center of Projection</summary>
+            <p>I experimented with taking photos from a fixed camera position, rotating the camera to capture different perspectives while keeping the lens position constant.</p>
+            <p>Here are the images <b>(NOTE: CLEAN UP PRESENTATION)</b>:</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A1/image1.png" alt="Image 1" class="img-size15"/>
+                    <div class="caption">Image 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A1/image2.png" alt="Image 2" class="img-size15"/>
+                    <div class="caption">Image 2</div>
+                </div>
+            </div>
+    </details>
+
+    <details class="task" close> <!--Section 2-->
+        <summary>Calculating a Homography Matrix</summary>
+            <p>I worked on computing a homography matrix using at least four corresponding points between images.</p>
+            <p>I solved it using least squares.</p>
+            <p>I used these points: [[106,78],[45,217],[371,213],[315,51]] corresponding to [[0,0],[0,301],[402,301],[402,0]] (noted from my work in the next section).</p>
+            <p>This created the following system of linear equations:
+                \[
+                \begin{bmatrix}
+                106 & 78 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 106 & 78 & 1 & 0 & 0 \\
+                45 & 217 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 45 & 217 & 1 & -13545 & -65317 \\
+                371 & 213 & 1 & 0 & 0 & 0 & -149142 & -85626 \\
+                0 & 0 & 0 & 371 & 213 & 1 & -111671 & -64113 \\
+                315 & 51 & 1 & 0 & 0 & 0 & -126630 & -20502 \\
+                0 & 0 & 0 & 315 & 51 & 1 & 0 & 0 \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                h1 \\
+                h2 \\
+                h3 \\
+                h4 \\
+                h5 \\
+                h6 \\
+                h7 \\
+                h8 \\
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                0 \\
+                0 \\
+                0 \\
+                301 \\
+                402 \\
+                301 \\
+                402 \\
+                0 \\
+                \end{bmatrix}
+                \]
+            </p>
+            <p>The resulting homography matrix is:
+                \[ H =
+                \begin{bmatrix}
+                4.57035247e+00 & 2.00569425e+00 & -6.40901513e+02 \\
+                8.47015970e-01 & 6.55653103e+00 & -6.01193113e+02 \\
+                2.64495777e-03 & 8.00501991e-03 & 1.00000000e+00 \\
+                \end{bmatrix}
+                \]
+            </p>
+            <p>Reading the entries in this matrix, it seems very likely that my program computed the homography correctly</p>
+    </details>
+
+    <details class="task" close> <!--Section 3-->
+        <summary>Rectifying a Side-Angle Photo</summary>
+            <p>I tried correcting a photo of a square taken from an angle to make it look like it was shot straight-on.</p>
+            <p>I tested two methods: Bilinear Interpolation (rectified_BI) and Nearest Neighbor (rectified_NN).</p>
+            <p>Here are the results <b>(NOTE: CLEAN UP PRESENTATION)</b>:</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification1.png" alt="Rectification 1" class="img-size15"/>
+                    <div class="caption">Rectification 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A3/Rectification2.png" alt="Rectification 2" class="img-size15"/>
+                    <div class="caption">Rectification 2</div>
+                </div>
+            </div>
+            <p>
+                The hardest part was setting up the canvas. At first, only the square was rectified, and the rest of the image was cropped out.
+            </p>
+            <p>
+                To address this, I mapped the square’s four corners to a new rectangle ([[0,0],[0,301],[402,301],[402,0]]), choosing these coordinates to match the image size (302x403) for simplicity, without preserving aspect ratio. Then, I calculated where the homography mapped the original image’s corners and created a canvas large enough to fit them. I also translated coordinates to handle negative values, ensuring the entire image fit within the canvas.
+            </p>
+    </details>
+
+    <details class="task" close> <!--Section 4-->
+        <summary>Building Panoramas</summary>
+            <p>I worked on combining multiple images taken from the same position into seamless panoramas.</p>
+            <p>I created three panoramas, each from two images, using both Bilinear Interpolation (pano_BI) and Nearest Neighbor (pano_NN) methods.</p>
+            <p>Here are the results <b>(NOTE: CLEAN UP PRESENTATION)</b>:</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano1.png" alt="Panorama 1" class="img-size15"/>
+                    <div class="caption">Panorama 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano2.png" alt="Panorama 2" class="img-size15"/>
+                    <div class="caption">Panorama 2</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task A4/Pano3.png" alt="Panorama 3" class="img-size15"/>
+                    <div class="caption">Panorama 3</div>
+                </div>
+            </div>
+            <p>
+                The biggest challenge was the canvas size. I started with a large canvas, padding the base image by 500 pixels on all sides. I picked corresponding points between images, computed the homography, and mapped the second image onto a separate canvas of the same size. Then, I combined the canvases.
+            </p>
+            <p>
+                Managing alpha values was complex. I created an alpha_values matrix to track pixel placement, setting values to 1 for the base image and adding 1 for each warped image pixel. I combined the canvases with an elementwise sum, divided by the alpha matrix to blend overlaps (NumPy handled zero-division errors automatically).
+            </p>
+    </details>
+    <h1>Note: clean up presentation above.</h1>
+    <br>
+    <details class="task" close> <!--Section 5-->
+        <summary>Finding Corners with Harris Detector</summary>
+            <p>I explored detecting key points in images using the Harris corner detector.</p>
+            <p>I also implemented Adaptive Non-Maximal Suppression (ANMS) to select well-distributed corners. Early on, I tested with random corners before settling on ANMS.</p>
+            <p>Below are the detected corners overlaid on an image, shown with and without ANMS.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano1/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners without ANMS</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners with ANMS</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano2/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners without ANMS</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano2/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners with ANMS</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano3/Task B1/corners.png" alt="Corners without ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners without ANMS</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano3/Task B1/anms.png" alt="Corners with ANMS" class="img-size5"/>
+                    <div class="caption">Harris Corners with ANMS</div>
+                </div>
+            </div>
+            <p>ANMS helped reduce corner clustering, which improved feature matching later on.</p>
+            <p>I’m not sure why so many corners were detected on flat surfaces like walls, but the panoramas turned out well, so it seems to work.</p>
+    </details>
+
+    <details class="task" close> <!--Section 6-->
+        <summary>Extracting Feature Descriptors</summary>
+            <p>I extracted feature descriptors from the detected corners, using 8x8 patches sampled from 40x40 windows around each corner, blurred and normalized for robustness to lighting changes.</p>
+            <p>Below are several 8x8 feature descriptors from the bedroom image set.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano1/Task B2/feature1.png" alt="Descriptor 1" class="img-size5"/>
+                    <div class="caption">Feature Descriptor 1</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B2/feature2.png" alt="Descriptor 2" class="img-size5"/>
+                    <div class="caption">Feature Descriptor 2</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B2/feature3.png" alt="Descriptor 3" class="img-size5"/>
+                    <div class="caption">Feature Descriptor 3</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B2/feature4.png" alt="Descriptor 3" class="img-size5"/>
+                    <div class="caption">Feature Descriptor 4</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B2/feature5.png" alt="Descriptor 3" class="img-size5"/>
+                    <div class="caption">Feature Descriptor 5</div>
+                </div>
+            </div>
+            <p>These descriptors capture local texture and are normalized to handle lighting variations.</p>
+    </details>
+
+    <details class="task" close> <!--Section 7-->
+        <summary>Matching Features Between Images</summary>
+            <p>I matched feature descriptors between image pairs using Lowe’s ratio test, computing nearest neighbors and thresholding based on the ratio of first to second nearest neighbor distances.</p>
+            <p>Below are matched features between two images, with lines connecting the matches.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano1/Task B3/correspondances.png" alt="Matches Pair 1" class="img-size15"/>
+                    <div class="caption">Matched Features - Pair 1</div>
+                </div>
+            </div>
+            <p>This identifies likely corresponding points, though some mismatches may persist, which the next step addresses.</p>
+            <p>In the image, point 0 is the best match, and point 450 is the 450th best match.</p>
+    </details>
+
+    <details class="task" close> <!--Section 8-->
+        <summary>Robust Homography with RANSAC</summary>
+            <p>I implemented 4-point RANSAC from scratch to estimate homographies from matched features, then used them to stitch images automatically, building on my earlier mosaicing work.</p>
+            <p>I used the same image pairs and created three automatic mosaics. Below are comparisons of manual and automatic stitching for each.</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano1/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <div class="caption">Manual Stitching - Pano 1</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano1/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <div class="caption">Automatic Stitching - Pano 1</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano2/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <div class="caption">Manual Stitching - Pano 2</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano2/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <div class="caption">Automatic Stitching - Pano 2</div>
+                </div>
+            </div>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Pano3/Task B4/panorama_manual_NN.png" alt="Manual Pano 1" class="img-size5"/>
+                    <div class="caption">Manual Stitching - Pano 3</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Pano3/Task B4/panorama_NN.png" alt="Auto Pano 1" class="img-size5"/>
+                    <div class="caption">Automatic Stitching - Pano 3</div>
+                </div>
+            </div>
+            <p>The automatic method with RANSAC handles outliers better, producing results as good as or better than manual stitching.</p>
+            <p>Earlier, I used a large fixed canvas, which caused issues. This time, I switched to a dynamically sized canvas, which worked much better.</p>
+            <p>I’m showing results with nearest neighbor interpolation. For bilinear interpolation with automatic feature detection, check my code.</p>
+    </details>
+  
+    <footer>
+        &copy; 2025 Sinan — Image Warping and Mosaicing Exploration
+    </footer>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Image Alignment Exploration</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <h1>Image Alignment Experiments</h1>
+    <h2>Single-Scale Alignment</h2>
+        <p>
+            I explored aligning the red, green, and blue channels of an image to create a cohesive picture. I chose the blue channel as the base and aligned the red and green channels to it.
+            For single-scale alignment, I used pixel intensity for alignment, assuming the color channels have similar intensities at corresponding points.
+            I applied the normalized cross-correlation (NCC) metric to measure similarity between images. Higher NCC values indicate better alignment. Here’s the NCC formula I used:
+        </p>
+        <img src="./webpage images/NCC.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
+        <p>
+            To save computation time, I aligned only the middle 40% of the image. This wasn’t critical for single-scale alignment but became important for larger images in multi-scale alignment.
+            One challenge was handling the “ledge” when sliding one image over another. Since NCC requires aligned image corners for the dot product, I used the np.roll() function to shift the image. However, this caused “overflow” where shifted pixels wrapped around to the other side, which could skew NCC results. To fix this, I applied a masking matrix to the sliding image, setting border pixels to zero to prevent overflow from affecting the correlation.
+        </p>
+        <p>The offsets for aligning each color channel are listed below each image. The blue channel offset is always (0, 0) since it’s the base channel, with red and green aligned to it.</p>
+        <div class="image-row">
+            <div class="image-row">
+                <figure>
+                <h3>monastery.jpg</h3>
+                <img src="./images restored (ncc)/Red (2, 3) || Green (2, -3) || Blue (0, 0) monastery.jpg" width="400">
+                <figcaption>Red (2, 3) || Green (2, -3) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+            <div class="image-row">
+                <figure>
+                <h3>cathedral.jpg</h3>
+                <img src="./images restored (ncc)/Red (3, 12) || Green (2, 5) || Blue (0, 0) cathedral.jpg" width="400">
+                <figcaption>Red (3, 12) || Green (2, 5) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+            <div class="image-row">
+                <figure>
+                <h3>tobolsk.jpg</h3>
+                <img src="./images restored (ncc)/Red (3, 7) || Green (3, 3) || Blue (0, 0) tobolsk.jpg" width="400">
+                <figcaption>Red (3, 7) || Green (3, 3) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        </div>
+    <h2>Multi-Scale Pyramid Alignment</h2>
+        <p>
+            For larger images, direct NCC was too slow. Instead, I used an image pyramid, which recursively reduces image size with a Gaussian filter until it’s small enough for efficient computation.
+            This allowed me to perform most calculations on the smallest image, then adjust as I scaled back up to larger sizes. Here’s a visual of an image pyramid:
+        </p>
+        <img src="./webpage images/pyramid_example.png" style="display: block; margin: 0 auto; max-width: 30%; height: auto;">
+        <p>
+            The image pyramid was fairly efficient compared to direct NCC, but it still took 90–120 seconds. To speed things up, I reduced the NCC search window by a factor of 2 at each pyramid level as I scaled up. This caused issues with some images, like emir.tif and melon.tif, as seen below.
+            To improve results, I switched to aligning based on edges rather than pixel intensity, since edges are more likely to be consistent across color channels. I used the Sobel filter from skimage to detect edges, which calculates pixel intensity derivatives. It assigns high values to areas with sharp intensity increases and low values to decreases, effectively highlighting edges.
+            The Sobel filter convolves the image with these kernels to compute x and y partial derivatives, then combines them into a single edge map using the magnitude function. I applied NCC to this edge map instead of raw pixel intensities.
+        </p>
+        <div class="image-row">
+            <figure>
+                <img src="./webpage images/sobmasks.gif" width="400">
+            </figure>
+            <figure>
+                <img src="./webpage images/sobel magnitude.png" width="400">
+            </figure>
+        </div>
+        <p>Images aligned with NCC and the image pyramid are shown on the left, while those using the Sobel edge detector, NCC, and image pyramid are on the right.</p>
+        <h3>siren.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (-23, 97) || Green (-5, 49) || Blue (0, 0) siren.png" width="400">
+                <figcaption>Red (-23, 97) || Green (-5, 49) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                    <img src="./images restored (sobel and ncc)/Red (-23, 97) || Green (-5, 49) || Blue (0, 0) siren.png" width="400">
+                    <figcaption>Red (-23, 97) || Green (-5, 49) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>emir.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (-277, 161) || Green (24, 48) || Blue (0, 0) emir.png" width="400">
+                <figcaption>Red (-277, 161) || Green (24, 48) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (41, 107) || Green (24, 49) || Blue (0, 0) emir.png" width="400">
+                <figcaption>Red (41, 107) || Green (24, 49) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>lugano.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (-28, 93) || Green (-15, 40) || Blue (0, 0) lugano.png" width="400">
+                <figcaption>Red (-28, 93) || Green (-15, 40) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (-29, 93) || Green (-15, 40) || Blue (0, 0) lugano.png" width="400">
+                <figcaption>Red (-29, 93) || Green (-15, 40) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>church.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (-4, 58) || Green (4, 25) || Blue (0, 0) church.png" width="400">
+                <figcaption>Red (-4, 58) || Green (4, 25) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (-4, 58) || Green (4, 25) || Blue (0, 0) church.png" width="400">
+                <figcaption>Red (-4, 58) || Green (4, 25) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>lastochikino.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (-8, 75) || Green (-2, -3) || Blue (0, 0) lastochikino.png" width="400">
+                <figcaption>Red (-8, 75) || Green (-2, -3) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (-8, 75) || Green (-2, -3) || Blue (0, 0) lastochikino.png" width="400">
+                <figcaption>Red (-8, 75) || Green (-2, -3) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>three_generations.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (12, 110) || Green (15, 50) || Blue (0, 0) three_generations.png" width="400">
+                <figcaption>Red (12, 110) || Green (15, 50) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (11, 110) || Green (13, 51) || Blue (0, 0) three_generations.png" width="400">
+                <figcaption>Red (11, 110) || Green (13, 51) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>melons.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (13, 181) || Green (-119, 92) || Blue (0, 0) melons.png" width="400">
+                <figcaption>Red (13, 181) || Green (-119, 92) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (13, 178) || Green (10, 82) || Blue (0, 0) melons.png" width="400">
+                <figcaption>Red (13, 178) || Green (10, 82) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>harvesters.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (15, 124) || Green (17, 59) || Blue (0, 0) harvesters.png" width="400">
+                <figcaption>Red (15, 124) || Green (17, 59) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (14, 124) || Green (17, 59) || Blue (0, 0) harvesters.png" width="400">
+                <figcaption>Red (14, 124) || Green (17, 59) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>icon.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (23, 90) || Green (18, 41) || Blue (0, 0) icon.png" width="400">
+                <figcaption>Red (23, 90) || Green (18, 41) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (23, 90) || Green (18, 41) || Blue (0, 0) icon.png" width="400">
+                <figcaption>Red (23, 90) || Green (18, 41) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>italil.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (36, 77) || Green (22, 38) || Blue (0, 0) italil.png" width="400">
+                <figcaption>Red (36, 77) || Green (22, 38) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (36, 76) || Green (22, 38) || Blue (0, 0) italil.png" width="400">
+                <figcaption>Red (36, 76) || Green (22, 38) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+        <h3>self_portrait.tif</h3>
+            <div class="image-row">
+                <figure>
+                <img src="./images restored (ncc)/Red (37, 175) || Green (29, 77) || Blue (0, 0) self_portrait.png" width="400">
+                <figcaption>Red (37, 175) || Green (29, 77) || Blue (0, 0)</figcaption>
+                </figure>
+                <figure>
+                <img src="./images restored (sobel and ncc)/Red (37, 175) || Green (29, 78) || Blue (0, 0) self_portrait.png" width="400">
+                <figcaption>Red (37, 175) || Green (29, 78) || Blue (0, 0)</figcaption>
+                </figure>
+            </div>
+            
+    <h2>Additional Images</h2>
+    <p>I tested two additional images of my choice. The NCC and image pyramid results are on the left, and the Sobel, NCC, and image pyramid results are on the right.</p>
+
+    <h3>garden.tif</h3>
+    <div class="image-row">
+        <figure>
+        <img src="./images restored (ncc)/Red (30, 156) || Green (21, 76) || Blue (0, 0) garden.png" width="400">
+        <figcaption>Red (30, 156) || Green (21, 76) || Blue (0, 0)</figcaption>
+        </figure>
+        <figure>
+        <img src="./images restored (sobel and ncc)/Red (30, 155) || Green (21, 76) || Blue (0, 0) garden.png" width="400">
+        <figcaption>Red (30, 155) || Green (21, 76) || Blue (0, 0)</figcaption>
+        </figure>
+    </div>
+    <h3>farmhouse.tif</h3>
+        <div class="image-row">
+            <figure>
+            <img src="./images restored (ncc)/Red (36, 123) || Green (19, 27) || Blue (0, 0) farmhouse.png" width="400">
+            <figcaption>Red (36, 123) || Green (19, 27) || Blue (0, 0)</figcaption>
+            </figure>
+            <figure>
+            <img src="./images restored (sobel and ncc)/Red (36, 123) || Green (19, 27) || Blue (0, 0) farmhouse.png" width="400">
+            <figcaption>Red (36, 123) || Green (19, 27) || Blue (0, 0)</figcaption>
+            </figure>
+        </div>
+
+</body>
+</html>

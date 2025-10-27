@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project 2: Fun with Filters</title>
+  
+    <link rel="stylesheet" href="styles.css" />
+    <!-- useful library for math formatting -->
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script> 
+</head>
+<body>
+
+    <header>
+        <h1>Project Two: Fun with Filters and Frequencies</h1>
+    </header>
+    <details class = "task" close> <!--Task 1.1-->
+        <summary>Task 1.1: Convolution From Scratch</summary>
+            <p>For this task, I had to implement a convolution function, and try it out with the image being a selfie and the kernels being a blurring, a Dx, and a Dy kernel</p>
+            <p>Here is a picture of myself</p>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.1/selfie original shrunk.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Original Selfie</div>
+                </div>
+            </div>
+
+            <p>
+                I convolve it with the a normalized version of the following 9x9 box filter
+                \[
+                \begin{bmatrix}
+                1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+                1 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 1 \\
+                1 & 2 & 3 & 3 & 3 & 3 & 3 & 2 & 1 \\
+                1 & 2 & 3 & 4 & 4 & 4 & 3 & 2 & 1 \\
+                1 & 2 & 3 & 4 & 5 & 4 & 3 & 2 & 1 \\
+                1 & 2 & 3 & 4 & 4 & 4 & 3 & 2 & 1 \\
+                1 & 2 & 3 & 3 & 3 & 3 & 3 & 2 & 1 \\
+                1 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 1 \\
+                1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+                \end{bmatrix}
+                \]
+                (I normalize this by dividing each entry by the sum of all entries)
+                As well as the Dx and Dy filters, as follows:
+                \[
+                D_x = \begin{bmatrix} 1 & 0 & -1 \end{bmatrix}, \quad
+                D_y = \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix}
+                \]
+            </p>
+
+            <p>At first, I convolve my image with all of these kernels using the existing scipy.signal.convolve2d function</p>
+            <h3 class="gallery-title">scipy.signal.convolve2d</h3>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.1/scipy/selfie original shrunk convolved Blurred.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Blurred Selfie</div>
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/scipy/selfie original shrunk convolved Dx.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dx Selfie</div>
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/scipy/selfie original shrunk convolved Dy.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dy Selfie</div>
+                </div>
+            </div>
+
+            <p>Then, I convolve my image with a convolve function I made myself that uses 4 for-loops these kernels using the existing function</p>
+            <h3 class="gallery-title">My own 4 for-loop convolve function</h3>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve4/selfie original shrunk convolved Blurred.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Blurred Selfie</div>
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve4/selfie original shrunk convolved Dx.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dx Selfie</div>
+
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve4/selfie original shrunk convolved Dy.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dy Selfie</div>
+
+                </div>
+            </div>
+            <p>Here is the code for the 4 for-loop convolve function</p>
+            <details class="code-block">
+                <summary class="code-block">View Code</summary>
+                <pre><code>
+class Convolution:
+    def __init__(self, path, kernel):
+        if np.ndim(kernel) != 2:
+            raise TypeError("kernel must be a matrix (a 2d array) \n for a '1D' kernel, just wrap your kernel around another set of brackets")
+        else:
+            self.im_path = path
+            self.image = ski.io.imread(path, as_gray=True)
+            self.kernel = kernel
+            self.flipped_kernel = [row[::-1] for row in kernel][::-1]
+
+    def convolve4(self):
+        image = ski.img_as_float(self.image)
+        print(np.min(image), np.max(image))
+        extension_length_dim1 = len(self.flipped_kernel)//2
+        extension_length_dim2 = len(self.flipped_kernel[0])//2
+        padded_image = np.pad(image, pad_width=((extension_length_dim1, extension_length_dim1), (extension_length_dim2, extension_length_dim2)), mode='constant')
+        rVal = (padded_image - padded_image)//1.0
+        for image_row in range(extension_length_dim1, extension_length_dim1 + len(image)):
+            for image_col in range(extension_length_dim2, extension_length_dim2 + len(image[0])):
+                for kernel_dim1_offset in range(-1*(extension_length_dim1), 1 + extension_length_dim1):
+                    for kernel_dim2_offset in range(-1*(extension_length_dim2), 1 + extension_length_dim2):
+                        rVal[image_row][image_col] += padded_image[image_row + kernel_dim1_offset][image_col + kernel_dim2_offset] * self.flipped_kernel[kernel_dim1_offset + extension_length_dim1][kernel_dim2_offset + extension_length_dim2]
+        return np.array([column[extension_length_dim2:extension_length_dim2 + len(image[0])] for column in rVal[extension_length_dim1:extension_length_dim1 + len(image)]])
+                </code></pre>
+            </details>
+
+            <p>Lastly, I convolve my image with a convolve function I made myself that uses 2 for-loops these kernels using the existing function</p>
+            <h3 class="gallery-title">My own 2 for-loop convolve function</h3>
+            <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve2/selfie original shrunk convolved Blurred.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Blurred Selfie</div>
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve2/selfie original shrunk convolved Dx.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dx Selfie</div>
+                </div>
+
+                <div class="image-card">
+                    <img src="images/Task 1.1/convolve2/selfie original shrunk convolved Dy.png" alt="Processed Image 1" class="img-size3"/>
+                    <div class="caption">Dy Selfie</div>
+                </div>
+            </div>
+            <p>Here is the code for the 2 for-loop convolve function</p>
+            <details class="code-block">
+                <summary class="code-block">View Code</summary>
+                <pre><code>
+class Convolution:
+    def __init__(self, path, kernel):
+        if np.ndim(kernel) != 2:
+            raise TypeError("kernel must be a matrix (a 2d array) \n for a '1D' kernel, just wrap your kernel around another set of brackets")
+        else:
+            self.im_path = path
+            self.image = ski.io.imread(path, as_gray=True)
+            self.kernel = kernel
+            self.flipped_kernel = [row[::-1] for row in kernel][::-1]
+
+    def convolve2(self):
+        image = self.image
+        img_extension_length_dim1 = len(self.flipped_kernel)//2
+        img_extension_length_dim2 = len(self.flipped_kernel[0])//2
+        padded_image = np.pad(image, pad_width=((img_extension_length_dim1, img_extension_length_dim1), (img_extension_length_dim2, img_extension_length_dim2)), mode='constant')
+        ker_extension_length_dim1 = len(padded_image) - len(self.flipped_kernel)
+        ker_extension_length_dim2 = len(padded_image[0]) - len(self.flipped_kernel[0])
+        padded_kernel = np.pad(self.flipped_kernel, pad_width=((0, ker_extension_length_dim1), (0, ker_extension_length_dim2)))
+        rVal = (padded_image - padded_image)//1.0
+        for image_row in range(img_extension_length_dim1, img_extension_length_dim1 + len(image)):
+            padded_kernel_colRol = padded_kernel
+            for image_col in range(img_extension_length_dim2, img_extension_length_dim2 + len(image[0])):
+                rVal[image_row][image_col] += np.sum(padded_image * padded_kernel_colRol)
+                padded_kernel_colRol = np.roll(padded_kernel_colRol, 1, axis=1)
+            padded_kernel = np.roll(padded_kernel, 1, axis=0)
+        return np.array([column[img_extension_length_dim2:img_extension_length_dim2 + len(image[0])] for column in rVal[img_extension_length_dim1:img_extension_length_dim1 + len(image)]])
+                </code></pre>
+            </details>
+            <p>
+                I noticed that convolve with 4 for loops took more time than convolve with 2 for loops, which took more time than scipy.signal.convolve2d did. All cases zero fill the boundaries to convolve.
+                However, observe how the blurring, Dx, and Dy filters for the scipy.signal.convolve2d, convolution with 4 for-loops, and convolution with 2 for-loops all result in images that look identical, even though they have been processed calling python functions</p>
+    </details>
+
+
+
+
+    <details class = "task" close> <!--Task 1.2-->
+        <summary>Task 1.2: Finite Difference Operators</summary>
+        <p>For this task, I created a "gradient magnitude image" by first finding the partial x and y derivatives of the pixel intensities, and than computing the gradient magnitude of each pixel, all of which together make the gradient magnitude image</p>
+        <p>Here is the image that we will process: a picture of a cameraman</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Original Image</div>
+            </div>
+        </div>
+        <p>Once again, here are the finite difference operators, and the result of applying the finite difference operators to the image:
+        \[
+        D_x = \begin{bmatrix} 1 & 0 & -1 \end{bmatrix}, \quad
+        D_y = \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix}
+        \]
+        </p>
+        <h3 class="gallery-title">Partial Derivative Images (Not Normalized)</h3>
+        <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.2/cameraman Dx.png" alt="Processed Image 1" class="img-size4"/>
+                    <div class="caption">Partial x derivative</div>
+                </div>
+
+
+                <div class="image-card">
+                    <img src="images/Task 1.2/cameraman Dy.png" alt="Processed Image 1" class="img-size4"/>
+                    <div class="caption">Partial y derivative</div>
+                </div>
+        </div>
+        <h3 class="gallery-title">Partial Derivative Images (Normalized)</h3>
+        <div class="row-gallery">
+                <div class="image-card">
+                    <img src="images/Task 1.2/cameraman Dx normalized.png" alt="Processed Image 1" class="img-size4"/>
+                    <div class="caption">Partial x derivative normalized</div>
+                </div>
+                <div class="image-card">
+                    <img src="images/Task 1.2/cameraman Dy normalized.png" alt="Processed Image 1" class="img-size4"/>
+                    <div class="caption">Partial y derivative normalized</div>
+                </div>
+        </div>
+        <p>
+            I computed the gradient magnitude by taking the values along each pixel of these two images, and applying the following function to figure out what the value of the gradient magnitude image should be
+            \[
+            |\nabla I(x, y)| = \sqrt{D_x\left(x, y\right)^2 + D_y\left(x, y\right)^2}
+            \]
+        </p>
+        <h3 class="gallery-title">Gradient Magnitude Image</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Raw Gradient Magnitude Image</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Clipped Gradient Magnitude Image</div>
+                <div class="explanation">Clipped values greater than 1 down to 1</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag normalized.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Normalized Gradient Magnitude Image</div>
+            </div>
+        </div>
+        <p>
+            Notice that the clipped gradient magnitude image looks sharper than the normalized gradient magnitude image.
+            This is because, although the pixel values of the raw gradient magnitude image range from 0 to roughly ~1.414, there are actually only 4 pixels that are greater than 1.
+            As such, clipping those four pixels down to one proved to be a much better choice for a sharper image
+        </p>
+        <p>
+            Now, we will binarize the gradient magnitude image. This means we choose a threshold of pixel intensity, and set every pixel above that intensity to 1 and every pixel less than or equal to it to 0
+            The point of this is to eliminiate noise in the gradient magnitude image (namely, the grass on the ground), while keeping the main details of the gradient magnitude image (the person, the camera, and the buildings in the background)
+            Here is several versions of our gradient magnitude binarized with different thresholds. 
+            Notice that when threshold=0.00, you can see a lot of the edges caused by grass on the ground, whereas once threshold=0.7, practically nothing of interest is left to see.
+            It seems that a threshold of 0.20 or 0.30 strikes the best balance between eliminating the vast majority of the noise, while also keeping the main features intact.
+        </p>
+        <h3 class="gallery-title">Binarized Gradient Magnitude Image</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.00</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.10).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.10</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.20).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.20</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.30).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.30</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.40).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.40</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.50).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.50</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.60).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.60</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.70).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.70</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.80).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.80</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(0.90).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.90</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.2/cameraman grad_mag clipped_thresh(1.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 1.00</div>
+            </div>
+        </div>
+    </div>         
+    </details>
+    <details class = "task" close> <!--Task 1.3-->
+        <summary>Task 1.3: Derivative of Gaussian Filter</summary>
+        <p>For this task, there is 2 parts. </p>
+        <p>
+            The first part is to recreate the gradient magnitude image, except after having blurred the image with a gaussian.
+            The second part is to recreate the gradient magnitude image once more, except by creating "DoG" filters. DoG stands for Derivaitve of Gaussian. The idea is to first convolve the gaussian with the finite difference filters, once for Dx and once for Dy, and then apply each of those to the original image and find the gradient magnitude from there.
+        </p>
+        <p>Both strategies should lead to the same results, and also lead to a better results of reducing noise while retaining key information about the image better than binarizing our un-blurred gradient magnitude image did</p>
+        <p>Here is the image that we will process. It is once again a picture of a cameraman</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/cameraman.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Original Image</div>
+            </div>
+        </div>
+        <h2 class="subtitle">Part 1</h2>
+        <p>The tricky part about Part 1 was finding the right parameters to your gaussian filter to use. You want to create enough of a blur to get rid of the noise in the background of your gradient magnitude image, but not so much to the point where you dull out the sharpness of your primary features. In order to prevent over blurring, I choose \(\sigma\)=1 (and length=5 was good enough for \(\sigma\)=1)</p>
+        <p>
+            Here is the gaussian filter I will be using. The top two are screenshots of the output from my python notebook, and the bottom two are those outputs when I save them directly to my files with ski.io.imsave
+            The white regions have higher values than the dark regions
+        </p>
+        <h3 class="gallery-title">Gaussian Kernel</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/1D_blur_kernel.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">1D Gaussian Kernel</div>
+                <div class="explanation">\(\sigma\)=1</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/Gaussian Kernel.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">2D Pixelated Gaussian Kernel</div>
+                <div class="explanation">5x5 kernel with \(\sigma\)=1</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/blur_kernel.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Gaussian Kernel</div>
+                <div class="explanation">5x5 kernel with \(\sigma\)=1</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/blur_kernel normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Gaussian Kernel Normalized</div>
+                <div class="explanation">5x5 kernel with \(\sigma\)=1</div>
+            </div>
+        </div>
+        <p>Here is the blurred photo as well as the original photo for comparison (zoom in to see the difference)</p>
+        <div class="row-gallery">    
+            <div class="image-card">
+                <img src="images/Task 1.3/cameraman.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Original Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Blurred Photo</div>
+            </div>
+        </div>
+        <p>I will repeat the procedure in Task 1.2 on this blurred image</p>
+        <div class="row-gallery">    
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred Dx.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Dx of Blurred Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred Dy.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Dy of Blurred Image</div>
+            </div>
+        </div>
+        <div class="row-gallery">    
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred Dx normalized.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Normalized Dx of Blurred Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred Dy normalized.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Normalized Dy of Blurred Image</div>
+            </div>
+        </div>
+        <div class="row-gallery">    
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman blurred grad_mag.png" alt="Processed Image 1" class="img-size5"/>
+                <div class="caption">Gradient Magnitude of Blurred Image</div>
+                <div class="explanation">No need to normalize or clip because pixel intensity values in range [0.00, 0.095)</div>
+            </div>
+        </div>
+        <p>
+            Notice how the gradient magnitude of the blurred image has blurred all the noise while keeping the primary features fully intact.
+            Although it was not able to eliminate all the noise from the grass, the noise looks much more dull than the gradient magnitude of the regular, which makes this a bit more visually appealing 
+            This is because the blurring eliminated that high frequency noise from the start. 
+        </p>
+        <p>
+            Here is binarized versions of the gradient magnitude of the blurred image with various thresholds.
+            It seems that a threshold of 0.00 and 0.10 seems to have the best results, balancing between dealing the noise while keeping the primary features in tact.
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.00</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.10).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.10</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.20).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.20</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.30).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.30</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.40).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.40</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.50).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.50</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.60).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.60</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.70).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.70</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.80).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.80</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(0.90).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.90</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 1/cameraman grad_mag binarized_thresh(1.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 1.00</div>
+            </div>
+        </div>
+        <p>
+            The best threshold appeared to be a threshold of 0.1, because it strikes the best balance of getting rid of the grass while keeping the main features of the photo
+        </p>
+        <h2 class="subtitle">Part 2</h2>
+        <p>
+            Now, I will create two DoG (gradient of magnitude) filters: one for Dx and one for Dy.
+            I do this by convolving my gaussian kernel with the finite difference filters
+            I will once again be using a 5x5 gaussian kernel with \(\sigma\)=1
+        </p>
+        <h3 class="gallery-title">Derivative of Gaussian Kernel</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/Dx of blur kernel.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Dx of Gaussian Kernel</div>
+                <div class="explanation">Not Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/Dy of blur kernel.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Dy of Gaussian Kernel</div>
+                <div class="explanation">Not Normalized</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/Dx of blur kernel normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Dx of Gaussian Kernel</div>
+                <div class="explanation">Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/Dy of blur kernel normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Dy of Gaussian Kernel</div>
+                <div class="explanation">Normalized</div>
+            </div>
+        </div>
+        <p>Here is the result of applying the Dx of Gaussian and Dy of Gaussian filters to the photo</p>
+        <h3 class="gallery-title">Image Filtered by Derivative of Gaussian Kernel</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman Dx of Gaussian.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Image filtered by Dx of Gaussian</div>
+                <div class="explanation">Not Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman Dy of Gaussian.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Image filtered by Dy of Gaussian</div>
+                <div class="explanation">Not Normalized</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman Dx of Gaussian normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Image filtered by Dx of Gaussian</div>
+                <div class="explanation">Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman Dy of Gaussian normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Image filtered by Dy of Gaussian</div>
+                <div class="explanation">Normalized</div>
+            </div>
+        </div>
+        <p>
+            Here is the gradient magnitude of the two images, as well as the binarized gradient magnitude. 
+            Note that it looks exactly identical to the results in Part 1 of this task. 
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Gradient magnitude of Dx of Gaussian and Dy of Gaussian</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.00</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.10).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.10</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.20).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.20</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.30).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.30</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.40).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.40</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.50).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.50</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.60).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.60</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.70).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.70</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.80).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.80</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(0.90).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 0.90</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 1.3/part 2/cameraman DoG grad_mag binarized_thresh(1.00).png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Threshold: 1.00</div>
+            </div>
+        </div>
+        <p>
+            The best threshold again appeared to be a threshold of 0.1, because this image is identical to that from Part 1 of this task
+        </p>
+    </details>
+    <details class = "task" close> <!--Task 2.1-->
+        <summary>Task 2.1: Image Sharpening</summary>
+        <p>
+            For this task, I had to "sharpen" an image. 
+            The way to go about this is to add more high frequencies to the image. 
+            We can get these high frequencies by blurring the image with our Gaussian filter, and then subtracting the image from the blurred image. 
+            This will leave us with an image that contains only the high frequencies of the original image. 
+            Let us call this the "sharpener"
+            Then, we can take that sharpener and add it to the image \(\alpha\) number of times to sharpen it like so:
+            \[\text{Sharpened Image} = \text{Image} + \alpha \cdot \text{Sharpener}\]
+        </p>
+        <p>
+            Here is the first image that I will be sharpening
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original.png" alt="Processed Image 1" class="img-size3"/>
+            </div>
+        </div>
+        <p>This is the result of blurring the image, and then subtracting the blurred image from the original image</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original blurred.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Blurred Image</div>
+                <div class="explanation">Low frequencies of image</div>
+            </div>
+        <div class="image-card">
+            <img src="images/Task 2.1/image1/sharpener.png" alt="Processed Image 1" class="img-size3"/>
+            <div class="caption">Sharpener</div>
+            <div class="explanation">High frequencies of image</div>
+        </div>
+        <div class="image-card">
+            <img src="images/Task 2.1/image1/sharpener normalized.png" alt="Processed Image 1" class="img-size3"/>
+            <div class="caption">Sharpener Normalized</div>
+            <div class="explanation">High frequencies of image</div>
+        </div>
+        </div>
+        <p>
+            Once we have this, we can add our sharpener to the original image to sharpen it.
+            I set my parameter \(\alpha\) to 2
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened clipped.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image Clipped</div>
+                <div class="explanation">Clipped negative values to zero</div>
+            </div>
+        </div>
+        <p>
+            Notice how the normalized image seems to look brighter rather than sharper. 
+            This is because, when we normalize the image, we are shifting the intensity of every pixel. 
+            But for this case, doing that does not make sense since there is not that many pixels with intensity below 0 in our picture
+            Therefore, just clipping the values below 0 result in a better image than normalizing
+        </p>
+        <h3 class="gallery-title">Image Pixel Intensity Range</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened range.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Sharpened Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened normalized range.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Sharpened and Normalized</div>
+            </div>
+        </div>
+        <p>Here is the sharpened image next to the original for comparison</p>
+        <h3 class="gallery-title">Original vs Sharpened</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Original Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image1/original sharpened clipped.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Sharpened Image</div>
+            </div>
+        </div>
+        <p>
+            I will use this process to sharpen a blurred photo.
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/originalWEB.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Original Photo</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Blurred Photo</div>
+            </div>
+        </div>
+        <p>This is the result of blurring the image, and then subtracting the blurred image from the original image</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original blurred.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Reblurring Image</div>
+                <div class="explanation">Blurring the blurred image again</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/sharpener.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpener</div>
+                <div class="explanation">Blurred photo minus double blurred photo</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/sharpener normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpener Normalized</div>
+            </div>
+        </div>
+        <p>
+            Once we have this, we can add our sharpener to the original image to sharpen it.
+            I set my parameter \(\alpha\) to 25
+        </p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened normalized.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image Normalized</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened clipped.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image Clipped</div>
+                <div class="explanation">Clipped negative values to zero</div>
+            </div>
+        </div>
+        <p>
+            Notice how the normalized image seems to look brighter rather than sharper. 
+            This is because, when we normalize the image, we are shifting the intensity of every pixel. 
+            But for this case, doing that does not make sense since there is not that many pixels with intensity below 0 in our picture
+            Therefore, just clipping the values below 0 result in a better image than normalizing
+        </p>
+        <h3 class="gallery-title">Image Pixel Intensity Range</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened plot.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Sharpened Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened normalized plot.png" alt="Processed Image 1" class="img-size4"/>
+                <div class="caption">Sharpened and Normalized</div>
+            </div>
+        </div>
+        <p>Here is the sharpened image next to the original for comparison</p>
+        <h3 class="gallery-title">Original vs Sharpened</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/originalWEB.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Original Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Blurred Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.1/image2/original sharpened clipped.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Sharpened Image</div>
+                <div class="explanation">This is oversharpened</div>
+            </div>
+        </div>
+    </details>
+
+    <details class = "task" close> <!--Task 2.2-->
+        <summary>Task 2.2: Hybrid Images</summary>
+        <p>For this task, we had to create a "hybrid image" using the approach give by SIGGRAPH 2006 paper by Oliva, Torralba, and Schyns.</p>
+        <p>
+            A 'hyrbid image' is a high frequency image added with a low frequency one. 
+            From a distance, you see the low frequency image, but from up close, you see the high frequency one
+        </p>
+        <p> We will use the following images to create a hybrid image</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/high frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">High Frequency Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/low frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Low Frequency Image</div>
+            </div>
+        </div>
+        <p>Here are the filtered versions of the images. 
+            The way I filtered the low frequency image is by convolving it with a gaussian, which leaves the low frequencies 
+            The way I filterd the high frequency image is by convolving it with a gaussian, and then subtracting off the convolved image from the original image, which eliminates the low frequencies and thus results in an image of the high frequencies.
+            The gaussian I convolved the high frequency image with was size 50x50 with \(\sigma\)=20 (and then I subtraced this blurred from the original). 
+            The gaussian I convolved the low frequency image with was size 50x50 with \(\sigma\)=10. 
+        </p>
+        <h3 class="gallery-title">Filtered Images</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/high frequency filtered.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">High Frequency Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/low frequency filtered.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Low Frequency Image</div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Filtered Images Normalized</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/high frequency filtered normalized.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">High Frequency Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/low frequency filtered normalized.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Low Frequency Image</div>
+            </div>
+        </div>
+        <p>
+            Here is the images represented in the frequency domain
+        </p>
+        <h3 class="gallery-title">Frequency Domain</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/high frequency Freq Dom.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Filtered High Frequency Image</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/low frequency Freq Dom.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Filtered Low Frequency Image</div>
+            </div>
+        </div>
+        <p>
+            I simply summed up the filtered low frequency image and the filtered high frequency image to get the hybrid image. 
+            Here is the final results
+        </p>
+        <h3 class="gallery-title">Hybrid Image</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/hybrid lfL_50 lfS_10 hfL_50 hfS_20.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="explanation">Devil face up close</div>
+                <div class="explanation">Smiley face from afar</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image3/hybrid Freq Dom.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Frequency Domain</div>
+            </div>
+        </div>
+        <p>Here is two more hyrbid images</p>
+        <h3 class="gallery-title">More Hybrid Images</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image2/high frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">High Frequency Image</div>
+                <div class="explanation">Gaussian: 50x50 \(\sigma\)=30</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image2/low frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Low Frequency Image</div>
+                <div class="explanation">Gaussian: 50x50 \(\sigma\)=30</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image2/hybrid lfL_50 lfS_30 hfL_50 hfS_30.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Hybrid Image</div>
+            </div>
+        </div>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.2/image1/high frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">High Frequency Image</div>
+                <div class="explanation">Gaussian: 50x50 \(\sigma\)=15</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image1/low frequency.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Low Frequency Image</div>
+                <div class="explanation">Gaussian: 50x50 \(\sigma\)=15</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.2/image1/hybrid lfL_50 lfS_15 hfL_50 hfS_15.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Hybrid Image</div>
+            </div>
+        </div>
+    </details>
+    <details class = "task" close>  <!--Task 2.3-->
+        <summary>Task 2.3: Gaussian and Laplacian Stack, Multiresolution Blending</summary>
+        <p>
+            For this task, I had to merge images via "Multiresolution Blending".
+            At a high level, multiresolution blending is just stitching together two images, and smoothing the transition between them.
+            To understand multiresolution blending, it is important to know what a Laplacian and a Gaussian stack
+        </p>
+        <p>
+            A "Laplacian stack" is just a stack of the image split up into different frequency bands, where the frequencies get higher as you go higher up the stack, with the base containing all the frequency left overs.
+            The way I have constructed this stack is by creating a "Gaussian Stack", which is the same thing but you are getting lower frequencies the higher up the stack you go. Then, I get an element of the stack and subtract it off from the less blurry image that is one element lower in the stack, and I end up with the high frequency difference between them (i.e the frequencies that were present in the less blurry element above my current element)
+            Essentially, each element in my laplacian stack is a "band pass" image, i.e it is the noise in between elements of the gaussian stack.
+            One final thing to note here is that at the bottom of your gaussian stack, your laplacian and your gaussian will be the same (that is the image that contains all the frequency left overs.)
+        </p>
+        <p>
+            When preforming multiresolution blending, you need two images, so you will construct a laplacian stack for the both of them.
+            You also need to have a mask to define where one image should end and the other should begin.
+            You should create a gaussian stack of your mask in parallel to your image. 
+            In the end, you have three stacks: a laplacian stack of your first image, a laplacian stack of your second image, and a gaussian stack of your mask.
+        </p>
+        <p>
+            Now that you have these three stacks, what you do is first, take an elementwise multiplication of the mask stack with the laplacian stack of image 1, and the same with (1- mask stack) and the laplacian stack of image 2.
+            Then, you do elementwise addition of the resulting two stacks. 
+            Finally, you collapse the stack by adding all the elements together (and in the end normalizing/clipping if necessary)
+        </p>
+        <p>
+            Here is a demonstration of the gaussian and laplacian stack on an apple and an orange.
+            All of these images are normalized.
+            I have included in the title the name of the blurring kernel used.
+            The left image is the gaussian, and right is the laplacian.
+        </p>
+        <h3 class="gallery-title">Layer 1: Gaussian 3x3 \(\sigma\)=1</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 2: Gaussian 9x9 \(\sigma\)=3</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 3: Gaussian 15x15 \(\sigma\)=5</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 4: Gaussian 21x21 \(\sigma\)=7</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 5: Gaussian 27x27 \(\sigma\)=9</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 6: Gaussian 33x33 \(\sigma\)=11</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image1_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image2_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>
+            I ended up going a total of 15 layers deep (although I did notice that after about 5 or 6 layers, adding an extra layer did not really do much to improve the quality of the oraple)
+            All of these images are normalized
+            For brevity, here is the highest layer of the stack, where tha laplacian is just the gaussian.
+        </p>
+        <h3 class="gallery-title">Layer 15: Gaussian 87x87 \(\sigma\)=29</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image1_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image2_laplacian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>
+            Here is a demonstration of the blending process broken down from the lowest layer in the stack to the highest.
+            All of these images are normalized.
+            The left two images are masked laplacians, and the second to right image is an addition of the two masked laplacians, while the right most image is the sum of this layer merged laplacians with that of all of the layers beneath it
+        </p>
+        <h3 class="gallery-title">Layer 1: Gaussian 3x3 \(\sigma\)=1</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer1_sigma1_length3/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 2: Gaussian 9x9 \(\sigma\)=3</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer2_sigma3_length9/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 3: Gaussian 15x15 \(\sigma\)=5</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer3_sigma5_length15/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 4: Gaussian 21x21 \(\sigma\)=7</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer4_sigma7_length21/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 5: Gaussian 27x27 \(\sigma\)=9</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer5_sigma9_length27/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 6: Gaussian 33x33 \(\sigma\)=11</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer6_sigma11_length33/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <p>
+            I ended up going a total of 15 layers deep (although I did notice that after about 5 or 6 layers, adding an extra layer did not really do much to improve the quality of the oraple)
+            For brevity, here is the highest layer of the stack, where the laplacian is just the gaussian.
+            (As a side note, the impact the zero filling of the mask borders when convolving is quite obvious here. However, the final oraple looks fine, so I it is not an issue)
+        </p>
+        <h3 class="gallery-title">Layer 15: Gaussian 87x87 \(\sigma\)=29</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/layer15_sigma29_length87/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>Here is the final blending orange apple: the oraple</p>
+        <h3 class="gallery-title">Final Oraple</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/piece2.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Apple</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Oraple</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.3/image1/piece1.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Orange</div>
+            </div>
+        </div>
+    </details>
+
+    <details class = "task" close> <!--Task 2.4-->
+        <summary>Task 2.4: Multiresolution Blending</summary>
+        <p>
+            For this task, I had to merge a few more images via multiresolution blending.
+            This time, I had to experiment with a variety of masks
+            Here is a step by step process for each blended image
+        </p>
+        <h2 class="subtitle">Multi Colored Car</h2>
+        <p>For this first blend, I decided to use the vertical mask once again</p>
+        <p>Here are my original images, as well as the mask and final result</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/piece1.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/piece2.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer1_sigma1_length3/mask_gaussian_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <p>
+            Here is a demonstration of the blending process broken down from the lowest layer in the stack to the highest.
+            All of these images are normalized.
+            I have included in the title the name of the blurring kernel used.
+            The left two images are masked laplacians, and the second to right image is an addition of the two masked laplacians, while the right most image is the sum of this layer merged laplacians with that of all of the layers beneath it
+        </p>
+        <h3 class="gallery-title">Layer 1: Gaussian 3x3 \(\sigma\)=1</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer1_sigma1_length3/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer1_sigma1_length3/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer1_sigma1_length3/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer1_sigma1_length3/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 2: Gaussian 9x9 \(\sigma\)=3</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer2_sigma3_length9/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer2_sigma3_length9/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer2_sigma3_length9/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer2_sigma3_length9/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 3: Gaussian 15x15 \(\sigma\)=5</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer3_sigma5_length15/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer3_sigma5_length15/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer3_sigma5_length15/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer3_sigma5_length15/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 4: Gaussian 21x21 \(\sigma\)=7</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer4_sigma7_length21/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer4_sigma7_length21/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer4_sigma7_length21/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer4_sigma7_length21/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 5: Gaussian 27x27 \(\sigma\)=9</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer5_sigma9_length27/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer5_sigma9_length27/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer5_sigma9_length27/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer5_sigma9_length27/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 6: Gaussian 33x33 \(\sigma\)=11</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer6_sigma11_length33/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer6_sigma11_length33/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer6_sigma11_length33/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer6_sigma11_length33/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <p>
+            I ended up going a total of 10 layers deep (going this deep proved to be quite helpful for the car)
+            For brevity, here is the highest layer of the stack, where the laplacian is just the gaussian.
+            (As a side note, the impact the zero filling of the mask borders when convolving is quite obvious here. However, the final image looks fine, so it is not an issue)
+        </p>
+        <h3 class="gallery-title">Layer 10: Gaussian 57x57 \(\sigma\)=19</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer10_sigma19_length57/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer10_sigma19_length57/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/layer10_sigma19_length57/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>Here is the final blending green and red car</p>
+        <h3 class="gallery-title">Final Multi Colored Car</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/piece2.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Green Car</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Multi Colored Car</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image1/piece1.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Red Car</div>
+            </div>
+        </div>
+
+        <h2 class="subtitle">Tree of Glitch</h2>
+        <p>For this image, I placed a tree of life into a glitch art</p>
+        <p>Here are my original images, as well as the mask and final result</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/piece1.jpeg" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/piece2.jpeg" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/mask.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <p>
+            Here is a demonstration of the blending process broken down from the lowest layer in the stack to the highest.
+            All of these images are normalized.
+            I have included in the title the name of the blurring kernel used.
+            The left two images are masked laplacians, and the second to right image is an addition of the two masked laplacians, while the right most image is the sum of this layer merged laplacians with that of all of the layers beneath it
+        </p>
+        <h3 class="gallery-title">Layer 1: Gaussian 3x3 \(\sigma\)=1</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer1_sigma1_length3/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer1_sigma1_length3/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer1_sigma1_length3/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer1_sigma1_length3/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 2: Gaussian 9x9 \(\sigma\)=3</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer2_sigma3_length9/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer2_sigma3_length9/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer2_sigma3_length9/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer2_sigma3_length9/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 3: Gaussian 15x15 \(\sigma\)=5</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer3_sigma5_length15/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer3_sigma5_length15/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer3_sigma5_length15/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer3_sigma5_length15/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 4: Gaussian 21x21 \(\sigma\)=7</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer4_sigma7_length21/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer4_sigma7_length21/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer4_sigma7_length21/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer4_sigma7_length21/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 5: Gaussian 27x27 \(\sigma\)=9</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer5_sigma9_length27/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer5_sigma9_length27/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer5_sigma9_length27/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer5_sigma9_length27/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 6: Gaussian 33x33 \(\sigma\)=11</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer6_sigma11_length33/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer6_sigma11_length33/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer6_sigma11_length33/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer6_sigma11_length33/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <p>
+            I ended up going a total of 15 layers deep. 
+            For brevity, here is the highest layer of the stack, where the laplacian is just the gaussian.
+        </p>
+        <h3 class="gallery-title">Layer 15: Gaussian 87x87 \(\sigma\)=29</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer15_sigma29_length87/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer15_sigma29_length87/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/layer15_sigma29_length87/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>Here is the final blending of the tree of life with the glitch art</p>
+        <h3 class="gallery-title">Final Tree of Glitch</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/piece1.jpeg" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Tree of Life</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Tree of Glitch</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image2/piece2.jpeg" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Glitch Art</div>
+            </div>
+        </div>
+
+
+        <h2 class="subtitle">Galaxy Bridge</h2>
+        <p>For this image, I placed a bridge in the galaxy</p>
+        <p>Here are my original images, as well as the mask and final result</p>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/piece1.jpeg" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/piece2.jpeg" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/mask.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <p>
+            Here is a demonstration of the blending process broken down from the lowest layer in the stack to the highest.
+            All of these images are normalized.
+            I have included in the title the name of the blurring kernel used.
+            The left two images are masked laplacians, and the second to right image is an addition of the two masked laplacians, while the right most image is the sum of this layer merged laplacians with that of all of the layers beneath it
+        </p>
+        <h3 class="gallery-title">Layer 1: Gaussian 3x3 \(\sigma\)=1</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer1_sigma1_length3/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer1_sigma1_length3/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer1_sigma1_length3/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer1_sigma1_length3/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption">Final Image</div>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 2: Gaussian 9x9 \(\sigma\)=3</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer2_sigma3_length9/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer2_sigma3_length9/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer2_sigma3_length9/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer2_sigma3_length9/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 3: Gaussian 15x15 \(\sigma\)=5</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer3_sigma5_length15/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer3_sigma5_length15/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer3_sigma5_length15/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer3_sigma5_length15/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 4: Gaussian 21x21 \(\sigma\)=7</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer4_sigma7_length21/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer4_sigma7_length21/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer4_sigma7_length21/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer4_sigma7_length21/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 5: Gaussian 27x27 \(\sigma\)=9</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer5_sigma9_length27/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer5_sigma9_length27/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer5_sigma9_length27/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer5_sigma9_length27/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <h3 class="gallery-title">Layer 6: Gaussian 33x33 \(\sigma\)=11</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer6_sigma11_length33/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer6_sigma11_length33/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer6_sigma11_length33/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer6_sigma11_length33/merged_and_collapsed_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+            </div>
+        </div>
+        <p>
+            I ended up going a total of 15 layers deep. 
+            For brevity, here is the highest layer of the stack, where the laplacian is just the gaussian.
+            (As a side note, the impact the zero filling of the mask borders when convolving is quite obvious here. However, the final image looks fine, so it is not an issue)
+        </p>
+        <h3 class="gallery-title">Layer 15: Gaussian 87x87 \(\sigma\)=29</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer15_sigma29_length87/image1_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer15_sigma29_length87/image2_laplacian_masked_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/layer15_sigma29_length87/merged_image_normalizeTrue.png" alt="Processed Image 1" class="img-size2"/>
+                <div class="caption"></div>
+            </div>
+        </div>
+        <p>Here is the final blending of the tree of life with the glitch art</p>
+        <h3 class="gallery-title">Final Galaxy Bridge</h3>
+        <div class="row-gallery">
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/piece1.jpeg" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Bridge</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/final image_normalizeTrue.png" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Galaxy Bridge</div>
+            </div>
+            <div class="image-card">
+                <img src="images/Task 2.4/image3/piece2.jpeg" alt="Processed Image 1" class="img-size3"/>
+                <div class="caption">Galaxy</div>
+            </div>
+        </div>
+    </details>
+
+    <details class = "task" close> <!--Task 2.4-->
+        <summary>Closing Remarks</summary>
+        <p>
+            In this project, I learned a lot about how the image is composed of various frequencies, how our eyes percieve these various frequencies, and how to use these two pieces of information to manipulate images in interesting ways.
+        </p>
+        <p>
+            I also learned that each image is unique, and must be dealt with seperately. For the sake of time, I decided in part 2.4 to normalize all of my images. 
+            However, when I would look at the histogram plots of pixel intensity, I would see that for many of the images, clipping would have sufficed, and would have led to a better final output
+        </p>
+        <p>
+            I think my favorite part of the project was Task 1.3: the finite difference operators combined with the gaussian filter. It seemed like an interesting hack to be able to tell a computer to "point out the key features of an image"
+        </p>
+        <p>
+            Another part of the project that I also really liked was Task 2.2. 
+            Learning about how the human eye percieves various frequencies, and then being able to use that information in an engineering like context, was awesome.
+        </p>
+        <p>
+            Overall, I enjoyed the project quite a lot, and look forward to learning more things like this in the future.
+        </p>
+    </details>
+  <footer>
+    &copy; 2025 Sinan — Filter and Frequencies
+  </footer>
+</body>
+</html>
