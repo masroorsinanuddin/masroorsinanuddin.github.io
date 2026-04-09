@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diffusion Models</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Diffusion Models</h1>
+</header>
+<h1>Part A</h1>
+<!-- ===================== Overview ===================== -->
+<details class="task" open>
+  <summary>Overview</summary>
+  <p>
+    This project explores diffusion models through hands-on implementation and experimentation.
+    In <strong>Part A</strong>, we work with the pretrained <strong>DeepFloyd IF</strong> model to
+    understand diffusion sampling, prompt conditioning, and image generation.
+  </p>
+  <p>
+    All experiments in this section were conducted using pretrained models, focusing on understanding
+    diffusion behavior rather than training from scratch.
+  </p>
+</details>
+
+<!-- ===================== Part 0 ===================== -->
+<details class="task" open>
+  <summary>Part 0: Setup & Playing with DeepFloyd</summary>
+
+  <h3>Prompt Embeddings</h3>
+  <p>
+    I used the following prompt embeddings: 
+    ['a high quality picture',
+ 'an oil painting of a snowy mountain village',
+ 'a photo of the amalfi coast',
+ 'a photo of a man',
+ 'a photo of a hipster barista',
+ 'a photo of a dog',
+ 'an oil painting of people around a campfire',
+ 'an oil painting of an old man',
+ 'a lithograph of waterfalls',
+ 'a lithograph of a skull',
+ 'a man wearing a hat',
+ 'a high quality photo',
+ 'a rocket ship',
+ 'a pencil',
+ 'an unbelievably vibrant galaxy as seen from a camping trip',
+ 'someone working in the kitchen',
+ 'a clickbait thumbnail of a video tutorial on how to drink water',
+ 'a luxurious sports car driving through a tech dystopia',
+ 'a hagu',
+ 'an old T-Rex walking with a cane and a suit on',
+ '']
+  </p>
+
+  <h3>Random Seed</h3>
+  <p>
+    All experiments use a fixed random seed of 150 to ensure consistency
+    across parts of the project.
+  </p>
+
+  <h3>Text-to-Image Generation Experiments</h3>
+  <p>
+    Below are example outputs from DeepFloyd using custom text prompts.
+    I experimented with different <code>num_inference_steps</code> values to observe changes in
+    image quality and detail. (first number is for stage I, second for stage II)
+  </p>
+
+  <!-- ===== Prompt Experiments ===== -->
+  <div class="row-gallery">
+
+    <div class="image-card">
+      <img src="Images/part A/Part 0/Inference Steps 20 20/a hagu.png" alt="Prompt: a hagu" class="img-size3">
+      <div class="caption">
+        Prompt: <em>a hagu</em><br>
+        Inference Steps: 20 / 20
+      </div>
+    </div>
+
+    <div class="image-card">
+      <img src="Images/part A/Part 0/Inference Steps 20 20/an old T-Rex putting walking with a cane.png"
+           alt="Old T-Rex with Cane" class="img-size3">
+      <div class="caption">
+        Prompt: <em>an old T-Rex walking with a cane</em><br>
+        Inference Steps: 20 / 20
+      </div>
+    </div>
+
+    <div class="image-card">
+      <img src="Images/part A/Part 0/Inference Steps 20 20/a luxurious sports car driving through a tech dystopia.png"
+           alt="Tech Dystopia Car" class="img-size3">
+      <div class="caption">
+        Prompt: <em>a luxurious sports car driving through a tech dystopia</em><br>
+        Inference Steps: 20 / 20
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row-gallery">
+
+    <div class="image-card">
+      <img src="Images/part A/Part 0/Inference Steps 20 40/a luxurious sports car driving through a tech dystopia.png"
+           alt="Tech Dystopia Car 20/40" class="img-size3">
+      <div class="caption">
+        Prompt: <em>a luxurious sports car driving through a tech dystopia</em><br>
+        Inference Steps: 20 / 40
+      </div>
+    </div>
+
+    <div class="image-card">
+      <img src="Images/part A/Part 0/Inference Steps 40 40/a luxurious sports car driving through a tech dystopia.png"
+           alt="Tech Dystopia Car 40/40" class="img-size3">
+      <div class="caption">
+        Prompt: <em>a luxurious sports car driving through a tech dystopia</em><br>
+        Inference Steps: 40 / 40
+      </div>
+    </div>
+
+  </div>
+
+<p>
+    The prompt embeddings were reflected quite accurately in the images. The T-Rex had a cane. The "tech dystopia" always kind of has a dark ominious shade to it. 
+    The only thing that is noteworthy is that the first prompt, "a hagu", is actually a prompt in a different langauge, and this prompt always consistenlty resulted in a mountain island image no matter how many times I ran the model.
+</p>
+
+</details>
+
+<!-- ===================== Part 1.1 ===================== -->
+<details class="task">
+  <summary>Part 1.1: Forward Diffusion Process</summary>
+
+  <p>
+    I implemented the forward diffusion process that adds Gaussian noise to a clean image
+    according to the diffusion schedule.
+    As the timestep increases, the image becomes progressively noisier.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.1/noisy images.png" class="img-size-big">
+      <div class="caption">
+        Campanile at noise levels t = 250, 500, 750
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.2 ===================== -->
+<details class="task">
+  <summary>Part 1.2: Classical Gaussian Denoising</summary>
+
+  <p>
+    I attempted to denoise the noisy Campanile images using Gaussian blur.
+    This method struggled to remove diffusion noise without severely blurring the image,
+    especially at higher noise levels.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.2/gaussian denoise images.png" class="img-size-big">
+      <div class="caption">
+        Gaussian denoising at t = 250, 500, 750
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.3 ===================== -->
+<details class="task">
+  <summary>Part 1.3: One-Step Denoising</summary>
+
+  <p>
+    I used the pretrained DeepFloyd Stage-I UNet to estimate and remove noise
+    in a single denoising step.
+    This produced significantly better results than Gaussian blur,
+    especially for moderate noise levels.
+  </p>
+
+  <div class="row-gallery">
+
+    <div class="image-card">
+      <img src="Images/part A/part 1.3/original image.png" class="img-size3">
+      <div class="caption">Original Campanile</div>
+    </div>
+
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.3/noisy images.png" class="img-size-big">
+      <div class="caption">Noisy Inputs</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.3/one step denoise images.png" class="img-size-big">
+      <div class="caption">One-Step Denoised Outputs</div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.4 ===================== -->
+<details class="task">
+  <summary>Part 1.4: Iterative Denoising</summary>
+
+  <p>
+    I implemented iterative denoising using a strided timestep schedule.
+    Compared to one-step denoising, this approach gradually removes noise
+    and produces much higher-quality reconstructions.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.4/all images.png" class="img-size-big">
+      <div class="caption">
+        Iterative denoising progression and comparisons
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.5 ===================== -->
+<details class="task">
+  <summary>Part 1.5: Sampling from Noise</summary>
+
+  <p>
+    By starting from pure Gaussian noise and applying iterative denoising,
+    I generated images from scratch using the prompt
+    <em>"a high quality photo"</em>.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.5/all images.png" class="img-size-big">
+      <div class="caption">
+        Samples generated from pure noise
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.6 ===================== -->
+<details class="task">
+  <summary>Part 1.6: Classifier-Free Guidance (CFG)</summary>
+
+  <p>
+    I implemented classifier-free guidance (CFG) by combining conditional
+    and unconditional noise estimates.
+    This noticeably improved image quality and structure compared to unguided sampling.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.6/all images.png" class="img-size-big">
+      <div class="caption">
+        Samples generated with CFG
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.7 ===================== -->
+<details class="task">
+  <summary>Part 1.7: Image-to-Image Translation (SDEdit)</summary>
+
+  <p>
+    I applied SDEdit by adding controlled amounts of noise to real images
+    and projecting them back onto the natural image manifold.
+    Increasing the noise level results in larger semantic changes.
+  </p>
+
+  <h3>Campanile Edits</h3>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.0/all images.png" class="img-size-big">
+      <div class="caption">
+        Campanile edits at increasing noise levels
+      </div>
+    </div>
+  </div>
+
+  <h3>Hand-Drawn and Web Images</h3>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/web image/original.png" class="img-size3">
+      <div class="caption">Web image original</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/web image/noised and denoised original.png" class="img-size-big">
+      <div class="caption">Web image edit</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/hand drawing 1/original.png" class="img-size3">
+      <div class="caption">Hand drawing 1 original</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/hand drawing 1/noised and denoised original.png" class="img-size-big">
+      <div class="caption">Hand drawing 1</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/hand drawing 2/original.png" class="img-size3">
+      <div class="caption">Hand drawing 2 original</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.1/hand drawing 2/noised and denoised original.png" class="img-size-big">
+      <div class="caption">Hand drawing 2</div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.7.2 ===================== -->
+<details class="task">
+  <summary>Part 1.7.2: Inpainting</summary>
+
+  <p>
+    I implemented inpainting by fixing known pixels at each denoising step
+    while allowing diffusion to fill in masked regions.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.2/inpainting masks.png" class="img-size-big">
+      <div class="caption">Inpainting masks</div>
+    </div>
+  </div>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.2/masks filled in.png" class="img-size-big">
+      <div class="caption">Inpainted results</div>
+    </div>
+
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.7.3 ===================== -->
+<details class="task">
+  <summary>Part 1.7.3: Text-Conditional Image Editing</summary>
+
+  <p>
+    I guided image edits using text prompts, allowing semantic changes
+    while still preserving the structure of the original image.
+    The Campanile reacts to the prompt quite well, and has a rockethsip head on it now. 
+    The shrek doesn't do a bad job either, and now has a pointed head. 
+    The sunset over the ocean does bad, with a mountain ridge. However, the idea of a pointed thing is still present here.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.7/part 1.7.3/masks filled in with prompt_ a rocket ship.png" class="img-size-big">
+      <div class="caption">
+        Prompt-guided edit: "a rocket ship"
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.8 ===================== -->
+<details class="task">
+  <summary>Part 1.8: Visual Anagrams</summary>
+
+  <p>
+    I created visual anagrams by averaging noise predictions from two prompts,
+    one applied to the image and the other applied to a flipped version.
+    The resulting image changes meaning when rotated.
+    The man_campfire and the galaxy_dog turned out quite well.
+    When I was originally choosing my prompts, I choose a pencil and a rocketship to be my prompts for this question, thinking that similar objects would make a good anagram.
+    However, it seems that these objects, inspite of being similar (or perhaps because of being similar), made for a bad choice in designing a visual anagram.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.8/all images.png" class="img-size-big">
+      <div class="caption">
+        Visual anagram illusion
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part 1.9 ===================== -->
+<details class="task">
+  <summary>Part 1.9: Hybrid Images</summary>
+
+  <p>
+    I created hybrid images by combining low-frequency components from one prompt
+    with high-frequency components from another using factorized diffusion.
+    NOTE THAT THE LABEL FOR THE MIDDLE IMAGE IS WRONG, IT IS SUPPOSED TO BE A SKULL WATERFALL, not a rocketship pencil. 
+    Of these hybrid images, the skull waterfall looks good (it is a skull close up, and a waterfall from afar). 
+    The galaxy_dog also looks good. The original prompt for the galaxy was "an unbelievably vibrant galaxy as seen from a camping trip". 
+    From up close, you can see this camping trip, and from far, you can see a dog.
+    The man campfire did not turn out the best. You can see the campfire from up close, but from up far, the best that happens is you feel like you can somewhat vaguely make out a face in the sense that you see some eyes and a nose, and maybe even eyebrows, but nothing about really makes you think "this is a man"
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part A/part 1.9/hybrid images.png" class="img-size5">
+      <div class="caption">
+        Hybrid diffusion images
+      </div>
+    </div>
+  </div>
+
+</details>
+
+<h1>Part B</h1>
+<!-- ===================== Part B Overview ===================== -->
+<details class="task" open>
+  <summary>Overview</summary>
+  <p>
+    In Part B, I trained UNets from scratch on MNIST. I first trained a single-step denoising UNet,
+    and then trained a time-conditioned flow matching model that can iteratively generate digits from noise.
+    I also trained a class-conditioned version to get more control and cleaner samples.
+  </p>
+</details>
+<!-- ===================== Part B 1.1.0 ===================== -->
+<details class="task">
+  <summary>Part 1.1: Model Architecture</summary>
+  <p>Here is the architecture for the uncoditional unet</p>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.1/Unconditional Unet Architecture.png" class="img-size-big">
+      <div class="caption"></div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.1/Unconditional Unet Operations.png" class="img-size-big">
+      <div class="caption"></div>
+    </div>
+  </div>
+</details>
+<!-- ===================== Part B 1.1.0 ===================== -->
+<details class="task">
+  <summary>Part 1.2.0: Visualizing the Noising Process</summary>
+
+  <p>
+    I visualized the MNIST noising process by adding Gaussian noise with different sigma values.
+    As sigma increases, the digits become much harder to recognize.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.0/MNIST with different sigma noise levels.png" class="img-size-big">
+      <div class="caption">MNIST digits with different sigma noise levels</div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part B 1.2.1 ===================== -->
+<details class="task">
+  <summary>Part 1.2.1: Training a Single-Step Denoising UNet</summary>
+
+  <p>
+    I trained an unconditional UNet denoiser to map noisy MNIST digits to clean digits using MSE loss.
+    The loss curve below shows the training progression.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.1/Training Loss Curve.png" class="img-size-big">
+      <div class="caption">Training loss curve for the denoising UNet</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.1/epoch 5 top row original middle row noisy bottom row denoised.png" class="img-size-big">
+      <div class="caption">sigma = 5, epoch 5: top row original, middle row noisy, bottom row denoised</div>
+    </div>
+  </div>
+</details>
+
+<!-- ===================== Part B 1.2.2 ===================== -->
+<details class="task">
+  <summary>Part 1.2.2: Out-of-Distribution Testing</summary>
+
+  <p>
+    After training, I tested the denoiser on the same digit but with different noise levels sigma.
+    It does best near the training setting, and as sigma gets very large it starts to lose structure and “guess”.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.2/clean image.png" class="img-size3">
+      <div class="caption">Clean digit</div>
+    </div>
+  </div>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.2/denoiser results for various sigma.png" class="img-size-big">
+      <div class="caption">Denoiser outputs for different sigma values</div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part B 1.2.3 ===================== -->
+<details class="task">
+  <summary>Part 1.2.3: Denoising Pure Noise</summary>
+
+  <p>
+    I repeated the training procedure but changed the input to be pure Gaussian noise.
+    After training, the model tends to output blurry digit-like “averages” instead of crisp diverse digits.
+    This makes sense since MSE encourages predicting a kind of centroid of the training distribution.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.3/training loss curve.png" class="img-size-big">
+      <div class="caption">Training loss curve (pure noise denoising)</div>
+    </div>
+  </div>
+<p>These are the hyperparameters I used:</p>
+<ul>
+  <li><code>batch_size = 256</code></li>
+  <li><code>learning_rate = 1e-4</code></li>
+  <li><code>hidden_dim = 128</code></li>
+  <li><code>num_epochs = 5</code></li>
+</ul>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.3/denoising pure noise epoch 1.png" class="img-size-big">
+      <div class="caption">Epoch 1</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 1.2.3/denoising pure noise epoch 5.png" class="img-size-big">
+      <div class="caption">Epoch 5</div>
+    </div>
+  </div>
+
+</details>
+<!-- ===================== Part B 2.1 ===================== -->
+<details class="task">
+  <summary>Part 2.1: Model Architecture</summary>
+  <p>Here is the architecture for the conditional unet</p>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.1/time conditional unet architecture.png" class="img-size-big">
+      <div class="caption">Conditioned Unet</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.1/FC Block for conditioning.png" class="img-size-big">
+      <div class="caption">FCBlock for conditioning</div>
+    </div>
+  </div>
+</details>
+<!-- ===================== Part B 2.2 ===================== -->
+<details class="task">
+  <summary>Part 2.2: Training a Time-Conditioned Flow Matching UNet</summary>
+
+  <p>
+    I added time-conditioning to the UNet and trained it to predict the flow from noisy x_t to clean x_1.
+    The loss curve below shows that the model steadily learns the velocity field over training.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.2/training loss curve.png" class="img-size-big">
+      <div class="caption">Training loss curve (time-conditioned flow matching)</div>
+    </div>
+  </div>
+<p>These are the hyperparameters I used:</p>
+<ul>
+  <li><code>batch_size = 256</code></li>
+  <li><code>learning_rate = 1e-4</code></li>
+  <li><code>hidden_dim = 128</code></li>
+  <li><code>num_epochs = 10</code></li>
+  <li><code>num_ts = 50</code></li>
+</ul>
+</details>
+
+<!-- ===================== Part B 2.3 ===================== -->
+<details class="task">
+  <summary>Part 2.3: Sampling from the Time-Conditioned UNet</summary>
+
+  <p>
+    I sampled digits by starting from noise and iteratively updating the sample using the predicted flow.
+    The samples become much more legible as training progresses.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.2/sampling results for epoch 1_5_10.png" class="img-size-big">
+      <div class="caption">Sampling results at epochs 1, 5, and 10</div>
+    </div>
+  </div>
+
+</details>
+
+<!-- ===================== Part B 2.5 ===================== -->
+<details class="task">
+  <summary>Part 2.5: Training a Class-Conditioned Flow Matching UNet</summary>
+
+  <p>
+    I trained a class-conditioned model using one-hot digit labels with dropout (so it can still do unconditional generation).
+    The loss curve below shows the training progression for the class-conditioned UNet.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.5/training loss curve.png" class="img-size-big">
+      <div class="caption">Training loss curve (class-conditioned)</div>
+    </div>
+  </div>
+<p>These are the hyperparameters I used:</p>
+<ul>
+  <li><code>batch_size = 64</code></li>
+  <li><code>learning_rate = 1e-2</code></li>
+  <li><code>num_epochs = 10</code></li>
+  <li><code>num_ts = 300</code></li>
+  <li><code>hidden_dim = 64</code></li>
+  <li><code>p_uncond = 0.1</code></li>
+  <li><code>guidance_scale = 5.0</code></li>
+</ul>
+</details>
+
+<!-- ===================== Part B 2.6 ===================== -->
+<details class="task">
+  <summary>Part 2.6: Sampling with Class Conditioning</summary>
+
+  <p>
+    I sampled with class-conditioning and classifier-free guidance.
+    Compared to the time-only model, the digits are cleaner and it converges faster,
+    and I can directly control which digit gets generated.
+  </p>
+
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.6/sampling results for epoch 1.png" class="img-size-big">
+      <div class="caption">Class-conditioned samples at epochs 1</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.6/sampling results for epoch 5.png" class="img-size-big">
+      <div class="caption">Class-conditioned samples at epochs 5</div>
+    </div>
+  </div>
+  <div class="row-gallery">
+    <div class="image-card">
+      <img src="Images/part B/part 1.2/part 2.6/sampling results for epoch 10.png" class="img-size-big">
+      <div class="caption">Class-conditioned samples at epochs 10</div>
+    </div>
+  </div>
+</details>
+
+
+
+<footer>
+  &copy; 2025 CS180 Programming Project 5 — UC Berkeley
+</footer>
+
+</body>
+</html>
