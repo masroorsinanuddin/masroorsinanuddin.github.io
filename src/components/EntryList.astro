@@ -1,0 +1,17 @@
+---
+interface Entry { id: string; collection: 'projects' | 'notes'; data: { title: string; description: string; date: Date; tags: string[] } }
+const { entries } = Astro.props as { entries: Entry[] };
+const format = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short' });
+---
+<ol class="entry-list">
+  {entries.map((entry) => (
+    <li class="entry">
+      <time datetime={entry.data.date.toISOString()}>{format.format(entry.data.date)}</time>
+      <div>
+        <h3><a href={`${import.meta.env.BASE_URL}${entry.collection}/${entry.id}/`}>{entry.data.title}</a></h3>
+        <p>{entry.data.description}</p>
+      </div>
+      {entry.data.tags[0] && <span class="tag meta">{entry.data.tags[0]}</span>}
+    </li>
+  ))}
+</ol>

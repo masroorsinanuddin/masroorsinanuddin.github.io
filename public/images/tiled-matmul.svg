@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Tiled matrix multiplication</title><desc id="desc">Tiles from matrices A and B are loaded into shared memory and used to accumulate an output tile.</desc>
+  <rect width="960" height="420" fill="#fbf8f1"/>
+  <g fill="none" stroke="#6e756e" stroke-width="2"><rect x="70" y="70" width="220" height="220"/><rect x="370" y="70" width="220" height="220"/><rect x="670" y="70" width="220" height="220"/></g>
+  <g fill="#dce8e1" stroke="#42675a" stroke-width="3"><rect x="160" y="70" width="70" height="220"/><rect x="370" y="145" width="220" height="70"/><rect x="735" y="145" width="70" height="70"/></g>
+  <g fill="#252824" font-family="system-ui,sans-serif" text-anchor="middle"><text x="180" y="330" font-size="22">A tile</text><text x="480" y="330" font-size="22">B tile</text><text x="780" y="330" font-size="22">C tile</text><text x="330" y="185" font-size="30">×</text><text x="630" y="185" font-size="30">→</text><text x="480" y="380" font-size="15" fill="#676a63">cooperative load → reuse in shared memory → accumulate</text></g>
+</svg>

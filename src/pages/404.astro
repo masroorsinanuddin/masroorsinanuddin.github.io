@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../config';
+---
+<BaseLayout title="Page not found — Masroor Sinanuddin" description="The requested page could not be found.">
+  <div class="page">
+    <p class="page-kicker">404</p><h1>That page is not in the notebook.</h1>
+    <p class="lede">It may have moved, or the link may be incomplete.</p>
+    <p><a href={withBase('')}>Return home →</a></p>
+  </div>
+</BaseLayout>

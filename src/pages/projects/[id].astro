@@ -1,0 +1,13 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+export async function getStaticPaths() {
+  const entries = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+  return entries.map((entry, i) => ({ params: { id: entry.id }, props: { entry, prev: entries[i - 1], next: entries[i + 1] } }));
+}
+const { entry, prev, next } = Astro.props;
+const { Content, headings } = await render(entry);
+const words = entry.body?.trim().split(/\s+/).length ?? 0;
+const link = (e: CollectionEntry<'projects'> | undefined) => e && ({ title: e.data.title, href: `${import.meta.env.BASE_URL}projects/${e.id}/` });
+---
+<ArticleLayout {...entry.data} {headings} readingTime={Math.max(1, Math.ceil(words / 220))} prev={link(prev)} next={link(next)}><Content /></ArticleLayout>

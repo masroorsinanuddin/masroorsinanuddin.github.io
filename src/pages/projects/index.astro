@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryList from '../../components/EntryList.astro';
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<BaseLayout title="Projects — Masroor Sinanuddin" description="Systems projects, implementation notes, and experiments.">
+  <div class="page">
+    <p class="page-kicker">Selected work</p><h1>Projects</h1>
+    <p class="lede">A chronological record of systems I have implemented, measured, and taken apart.</p>
+    <hr class="rule" /><EntryList entries={projects} />
+  </div>
+</BaseLayout>

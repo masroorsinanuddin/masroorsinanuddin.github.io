@@ -1,0 +1,111 @@
+---
+title: "CUDA Matrix Multiplication, from Naive to Tiled"
+description: "Building a matrix multiplication kernel step by step, then measuring what each optimization changes."
+date: 2026-08-25
+tags: [CUDA, GPU, Performance]
+featured: true
+---
+
+import Callout from '../../components/Callout.astro';
+import MarginNote from '../../components/MarginNote.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import Figure from '../../components/Figure.astro';
+
+## Motivation
+
+Matrix multiplication is small enough to understand end to end, but rich enough to expose most of the questions that matter in GPU programming: how threads map to data, which memory hierarchy an access reaches, and whether the kernel is limited by arithmetic or by movement of bytes.
+
+<MarginNote>A useful optimization should come with a model of *why* it helps, not only a faster timing.</MarginNote>
+
+For matrices $A \in \mathbb{R}^{M \times K}$ and $B \in \mathbb{R}^{K \times N}$, the output is
+
+$$
+C_{ij} = \sum_{k=0}^{K-1} A_{ik}B_{kj}.
+$$
+
+The arithmetic is uncomplicated. The implementation is mostly about arranging those operations so thousands of GPU threads can reuse data efficiently.
+
+## Design
+
+I kept each kernel behind the same host-side interface. That made correctness tests and timing code independent of the implementation being measured.
+
+<Mermaid chart={`flowchart LR
+  A["Host matrices"] --> B["Copy to GPU"]
+  B --> C["Launch kernel"]
+  C --> D["Synchronize"]
+  D --> E["Validate output"]`} caption="The benchmark harness separates data setup, kernel execution, and validation." />
+
+The first kernel assigns one output element to each thread:
+
+```cpp
+__global__ void matmul_naive(const float* A, const float* B, float* C,
+                             int M, int N, int K) {
+    const int col = blockIdx.x * blockDim.x + threadIdx.x;
+    const int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (row >= M || col >= N) return;
+
+    float sum = 0.0f;
+    for (int k = 0; k < K; ++k) {
+        sum += A[row * K + k] * B[k * N + col];
+    }
+    C[row * N + col] = sum;
+}
+```
+
+This version is deliberately direct. Neighboring threads read neighboring elements of $B$, but each thread repeatedly fetches values that neighboring threads also need.
+
+## Implementation
+
+The tiled kernel cooperatively loads square regions of $A$ and $B$ into shared memory. Threads synchronize after a load, accumulate partial products, then advance to the next pair of tiles.
+
+<Figure src={`${import.meta.env.BASE_URL}images/tiled-matmul.svg`} alt="Diagram showing two input matrix tiles feeding an output tile" caption="Figure 1. A thread block reuses two input tiles while accumulating one output tile." />
+
+For a tile width $T$, the block performs approximately $2T^3$ floating-point operations after loading $2T^2$ values. Ignoring output traffic, arithmetic intensity therefore grows roughly with tile width:
+
+$$
+I \approx \frac{2T^3}{2T^2 \cdot \mathrm{sizeof}(\texttt{float})} = \frac{T}{4}\ \text{FLOP/byte}.
+$$
+
+<Callout label="Observation">The equation describes an idealized tile. Boundary checks, occupancy, bank conflicts, and cache behavior still determine whether a larger tile helps on a real GPU.</Callout>
+
+## Experiments
+
+Each timing should include warm-up launches and CUDA events around only the kernel region. Correctness should be checked against a CPU implementation or a trusted library with an error tolerance appropriate for floating-point accumulation.
+
+<Callout label="Replace before publishing">The table below contains illustrative placeholders, not measurements. Replace every bracketed value with results from your GPU and record the GPU model, CUDA version, compiler flags, matrix sizes, warm-up count, and number of timed iterations.</Callout>
+
+| Kernel | Matrix size | Tile | Time (ms) | Throughput (TFLOP/s) | Relative |
+|---|---:|---:|---:|---:|---:|
+| Naive | [4096²] | — | **[measure]** | **[compute]** | 1.0× |
+| Shared-memory tiled | [4096²] | [16] | **[measure]** | **[compute]** | **[compute]** |
+| Register-tiled | [4096²] | [32] | **[measure]** | **[compute]** | **[compute]** |
+| cuBLAS reference | [4096²] | — | **[measure]** | **[compute]** | **[compute]** |
+
+Throughput for an $N \times N$ square multiplication is computed as
+
+$$
+\mathrm{TFLOP/s} = \frac{2N^3}{t_{\mathrm{seconds}} \cdot 10^{12}}.
+$$
+
+## Results
+
+**[PLACEHOLDER — replace this section after benchmarking.]** Describe the performance curve, identify where tiling stops helping, and compare the result against cuBLAS without implying that a learning kernel should match a mature vendor library. Discuss measurements that surprised you, not just the fastest number.
+
+## Limitations
+
+- The current kernel assumes row-major, contiguous matrices.
+- **[PLACEHOLDER]** Document supported dimensions and how edge tiles are handled.
+- The benchmark does not yet separate launch overhead from steady-state throughput for small inputs.
+- Only FP32 is tested; tensor-core paths require a different data layout and numerical comparison.
+
+## Next steps
+
+The next iteration will add per-thread register tiling, inspect generated assembly, and use Nsight Compute to compare achieved occupancy, memory throughput, and instruction mix. I also want to test whether the same design choices transfer cleanly to batched matrix multiplication.
+
+## References
+
+1. NVIDIA, *CUDA C++ Programming Guide*.[^cuda]
+2. Kirk and Hwu, *Programming Massively Parallel Processors*, 5th ed.
+
+[^cuda]: Use the CUDA guide version matching the toolkit used for your final measurements, and link the exact version here.

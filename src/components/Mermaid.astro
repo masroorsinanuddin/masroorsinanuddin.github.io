@@ -1,0 +1,12 @@
+---
+const { chart, caption } = Astro.props;
+---
+<figure class="mermaid-wrap">
+  <pre class="mermaid">{chart}</pre>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+<script>
+  const { default: mermaid } = await import('mermaid');
+  const dark = document.documentElement.dataset.theme === 'dark';
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'system-ui' });
+</script>

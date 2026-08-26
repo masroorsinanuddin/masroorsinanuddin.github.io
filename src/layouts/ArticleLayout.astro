@@ -1,0 +1,26 @@
+---
+import BaseLayout from './BaseLayout.astro';
+const { title, description, date, tags = [], headings = [], readingTime = 1, prev, next } = Astro.props;
+const format = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long', day: 'numeric' });
+const tocHeadings = headings.filter((h: { depth: number }) => h.depth === 2 || h.depth === 3);
+---
+<BaseLayout title={`${title} — Masroor Sinanuddin`} {description} type="article">
+  <header class="article-header">
+    <p class="eyebrow">Technical notebook</p>
+    <h1>{title}</h1>
+    <p class="description">{description}</p>
+    <p class="meta"><time datetime={date.toISOString()}>{format.format(date)}</time> · {readingTime} min read · {tags.join(' · ')}</p>
+  </header>
+  <div class="article-layout">
+    <nav class="toc" aria-label="Table of contents">
+      <strong>Contents</strong>
+      <ul>{tocHeadings.map((h: { slug: string; text: string; depth: number }) => <li style={`padding-left:${(h.depth - 2) * .75}rem`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ul>
+    </nav>
+    <article class="article"><slot /></article>
+    <div class="article-rail" aria-hidden="true"></div>
+  </div>
+  {(prev || next) && <nav class="article-nav" aria-label="Article navigation">
+    {prev ? <a href={prev.href}>← Previous<br />{prev.title}</a> : <span />}
+    {next && <a href={next.href}>Next →<br />{next.title}</a>}
+  </nav>}
+</BaseLayout>

@@ -1,0 +1,20 @@
+---
+title: "Fault-Tolerant Key-Value Store"
+description: "A replicated key-value service built around Raft, versioned operations, and a deterministic state machine."
+date: 2026-07-22
+tags: [Rust, Raft, Storage]
+---
+## Motivation
+**[PROJECT ARTICLE PLACEHOLDER]** Introduce the failure model and consistency target.
+## Design
+Clients submit versioned operations to a replicated log; committed entries are applied in order to a deterministic state machine.
+## Implementation
+Cover leader election, AppendEntries, persistence, and client retry behavior here.
+## Experiments
+**[ADD FAILURE TESTS AND LATENCY RESULTS]**
+## Results
+**[ADD CONCLUSIONS]**
+## Limitations
+Document snapshotting, reconfiguration, and partition behavior not yet supported.
+## Next steps
+Add log compaction and a richer workload harness.

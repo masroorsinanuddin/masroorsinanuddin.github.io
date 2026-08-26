@@ -1,0 +1,20 @@
+---
+title: "PintOS Filesystem"
+description: "A persistent filesystem with a buffer cache, indexed files, and hierarchical directories."
+date: 2026-05-03
+tags: [C, Operating Systems, Storage]
+---
+## Motivation
+**[PROJECT ARTICLE PLACEHOLDER]** Explain the original filesystem constraints and required behavior.
+## Design
+The design combines a bounded write-back buffer cache with direct, indirect, and doubly-indirect block indexing.
+## Implementation
+Cover eviction, synchronization, file growth, directories, and persistence here.
+## Experiments
+**[ADD TEST COVERAGE OR CACHE RESULTS]**
+## Results
+**[ADD CONCLUSIONS]**
+## Limitations
+Document the crash-consistency and concurrency guarantees precisely.
+## Next steps
+Explore journaling and more realistic cache workloads.

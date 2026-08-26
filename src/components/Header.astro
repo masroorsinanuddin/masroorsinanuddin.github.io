@@ -1,0 +1,27 @@
+---
+import { SITE, withBase } from '../config';
+const path = Astro.url.pathname;
+const nav = [
+  ['Home', ''], ['Projects', 'projects/'], ['Notes', 'notes/'], ['About', 'about/'], ['Résumé', 'resume.pdf'],
+];
+---
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="shell site-header-inner">
+    <a class="wordmark" href={withBase('')} aria-label={`${SITE.name}, home`}>{SITE.shortName}</a>
+    <nav class="nav" aria-label="Primary navigation">
+      {nav.map(([label, href]) => <a href={withBase(href)} aria-current={path === withBase(href) ? 'page' : undefined}>{label}</a>)}
+      <a href={SITE.github} rel="me">GitHub ↗</a>
+      <button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button>
+    </nav>
+  </div>
+</header>
+<script is:inline>
+  const root = document.documentElement;
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') root.dataset.theme = 'dark';
+  document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', root.dataset.theme || 'light');
+  });
+</script>

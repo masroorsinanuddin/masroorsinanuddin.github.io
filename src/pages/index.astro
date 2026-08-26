@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EntryList from '../components/EntryList.astro';
+import { SITE, withBase } from '../config';
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<BaseLayout>
+  <div class="page">
+    <section class="home-intro">
+      <div>
+        <p class="page-kicker">Systems notebook · Fremont, California</p>
+        <h1>Masroor<br />Uddin</h1>
+        <p class="lede">I study and build computer systems, with particular interests in distributed systems, databases, GPU programming, and ML infrastructure. This is where I document projects, measurements, and things I am learning.</p>
+      </div>
+      <p class="home-mark">CS + Mathematics<br />UC Berkeley<br /><br />Working close to the parts of a system where performance, reliability, and design constraints become concrete.</p>
+    </section>
+
+    <div class="links" style="margin-top:2.2rem">
+      <a href={SITE.github}>GitHub ↗</a><a href={SITE.email}>Email ↗</a><a href={withBase('resume.pdf')}>Résumé ↗</a><a href={SITE.linkedin}>LinkedIn ↗</a>
+    </div>
+
+    <hr class="rule" />
+    <section>
+      <div class="section-head"><h2>Recent projects</h2><a href={withBase('projects/')}>All projects →</a></div>
+      <EntryList entries={projects.slice(0, 4)} />
+    </section>
+    <section style="margin-top:4rem">
+      <div class="section-head"><h2>Recent writing</h2><a href={withBase('notes/')}>All notes →</a></div>
+      <EntryList entries={notes.slice(0, 3)} />
+    </section>
+  </div>
+</BaseLayout>

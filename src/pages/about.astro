@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+---
+<BaseLayout title="About — Masroor Sinanuddin" description="Background and engineering interests.">
+  <div class="page">
+    <p class="page-kicker">About</p><h1>A little context</h1>
+    <p class="lede">I studied computer science and mathematics at UC Berkeley. I am most interested in the parts of software where abstractions meet real constraints: scheduling work, moving data, recovering from failure, and making programs run efficiently.</p>
+    <hr class="rule" />
+    <h2>Interests</h2>
+    <p>My current work centers on distributed systems, database internals, GPU kernels, runtime systems, and infrastructure for training and serving machine-learning models. I like projects that make behavior measurable and force careful choices about performance, correctness, and simplicity.</p>
+    <h2>What I am looking for</h2>
+    <p>I am looking for early-career engineering roles where I can build substantial systems rather than mostly application glue: storage and execution engines, distributed infrastructure, runtimes, developer infrastructure, or ML systems. I value small teams, direct ownership, and technically serious work.</p>
+    <h2>Contact</h2>
+    <p class="links"><a href={SITE.email}>Email me</a><a href={SITE.github}>GitHub</a><a href={SITE.linkedin}>LinkedIn</a></p>
+  </div>
+</BaseLayout>
