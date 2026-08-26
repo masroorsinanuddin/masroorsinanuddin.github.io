@@ -7,7 +7,7 @@ const projects = (await getCollection('projects', ({ data }) => !data.draft)).so
 <BaseLayout title="Projects — Masroor Sinanuddin" description="Systems projects, implementation notes, and experiments.">
   <div class="page">
     <p class="page-kicker">Selected work</p><h1>Projects</h1>
-    <p class="lede">A chronological record of systems I have implemented, measured, and taken apart.</p>
+    <p class="lede"></p>
     <hr class="rule" /><EntryList entries={projects} />
   </div>
 </BaseLayout>

@@ -7,7 +7,7 @@ const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort((a,
 <BaseLayout title="Notes — Masroor Sinanuddin" description="Short technical notes on systems, GPUs, databases, and infrastructure.">
   <div class="page">
     <p class="page-kicker">Working notes</p><h1>Notes</h1>
-    <p class="lede">Shorter explanations, implementation details, and questions worth returning to.</p>
+    <p class="lede"></p>
     <hr class="rule" /><EntryList entries={notes} />
   </div>
 </BaseLayout>
